@@ -17,6 +17,7 @@ class Player:
 
     def add_card(self, card):
         self.hand.append(card)
+        self.hand = sorted(self.hand, key=lambda x: x.order)
 
     def get_cards_by_suit(self, suit):
         filtered_hand = []
@@ -41,21 +42,21 @@ class Game:
         self.deck = []
         self.trump = None
 
-def create_game(startegy):
-    team1 = Team("Team 1")
-    team2 = Team("Team 2")
+def create_game(strategy):
+    team1 = Team("Sporting")
+    team2 = Team("Benfica")
 
-    player1 = Player("Player 1", team1)
-    player2 = Player("Player 2", team1)
-    player3 = Player("Player 3", team2)
-    player4 = Player("Player 4", team2)
+    player1 = Player("Leitão", team1)
+    player2 = Player("Fred", team1)
+    player3 = Player("Pedro", team2)
+    player4 = Player("Sebas", team2)
 
     team1.add_player(player1)
     team1.add_player(player2)
     team2.add_player(player3)
     team2.add_player(player4)
 
-    game = Game([team1, team2], startegy)
+    game = Game([team1, team2], strategy)
 
     # randomize players and team to start
     random.shuffle(team1.players)
@@ -64,8 +65,10 @@ def create_game(startegy):
     second_team = team2 if first_team is team1 else team1
     game.playersOrder = [player for pair in zip(first_team.players, second_team.players) for player in pair]
 
+    game.deck = create_deck()
+
     return game
-    
+
 def create_deck():
     suits = ["hearts", "diamonds", "clubs", "spades"]
     ranks = ["2", "3", "4", "5", "6", "7", "J", "Q", "K", "A"]
@@ -74,10 +77,7 @@ def create_deck():
         for suit in suits:
             card = Card(rank + "_of_" + suit, suit, rank)
             deck.append(card)
-    set_card_values(deck)
-    return deck
-
-def set_card_values(deck):
+    
     order = {
         '2': 0,
         '3': 1,
@@ -105,55 +105,49 @@ def set_card_values(deck):
             card.value = 0   
         card.order = order[card.rank] 
 
+    return deck
+
 def hand_cards(game):
     for i, player in enumerate(game.playersOrder):
         for j in range(10):
             card = game.deck.pop(random.randint(0, len(game.deck) - 1))
             player.add_card(card)
-            if i == len(game.playersOrder) - 1: ## Last card is the trump
-                if j == 9:
+            if i == len(game.playersOrder) - 1: ## Last player
+                if j == 9:                      ## Last card
                     game.trump = card
 
 def calculate_round_points(cardsPlayedInRound, gameTrumpSuit):
-    winningCard = (None, None)
-    i = 0
-    while i < len(cardsPlayedInRound):
+    winningCard = (cardsPlayedInRound[0], 0)
+
+    for i, card in enumerate(cardsPlayedInRound):
         if i == 0:
-            if cardsPlayedInRound[i].suit == cardsPlayedInRound[i+1].suit:
-                winningCard = (cardsPlayedInRound[i] if cardsPlayedInRound[i].order > cardsPlayedInRound[i+1].order else cardsPlayedInRound[i+1],\
-                   i if cardsPlayedInRound[i].order > cardsPlayedInRound[i+1].order else i+1) 
-            else: 
-                if cardsPlayedInRound[i+1].suit == gameTrumpSuit:
-                    winningCard = (cardsPlayedInRound[i+1], i+1)
-                else:
-                    winningCard = (cardsPlayedInRound[i], i)
-            i += 1
-        else: 
-            if winningCard[0].suit == cardsPlayedInRound[i].suit:
-                winningCard = (winningCard[0] if winningCard[0].order > cardsPlayedInRound[i].order else cardsPlayedInRound[i],
-                               winningCard[1] if winningCard[0].order > cardsPlayedInRound[i].order else i)                
-            else:
-                if cardsPlayedInRound[i].suit == gameTrumpSuit:
-                    winningCard = (cardsPlayedInRound[i], i)
-        i += 1
+            continue
+
+        if card.suit == winningCard[0].suit and card.order > winningCard[0].order or\
+            card.suit == gameTrumpSuit and winningCard[0].suit != gameTrumpSuit:
+            winningCard = (card, i)
+
     roundPoints = 0
     for card in cardsPlayedInRound:
         roundPoints += card.value
+
     return roundPoints, winningCard[1]
 
 def rotate_order_to_winner(playersOrderList, winner):
     winner_index = playersOrderList.index(winner)    
     rotated_list = playersOrderList[winner_index:] + playersOrderList[:winner_index]
+
     return rotated_list
 
 def play_round(game):
     roundSuit = ''
     cardsPlayedInround = []
+    print('\n')
+
     for i, player in enumerate(game.playersOrder):
         if i == 0:
             cardPlayed = player.hand.pop(random.randint(0, len(player.hand) - 1))
             roundSuit = cardPlayed.suit
-            cardsPlayedInround.append(cardPlayed)
         else:
             cardsOfTheSameSuit = player.get_cards_by_suit(roundSuit)
             if len(cardsOfTheSameSuit) != 0:
@@ -161,12 +155,18 @@ def play_round(game):
                 player.hand.remove(cardPlayed)
             else:
                 cardPlayed = player.hand.pop(random.randint(0, len(player.hand) - 1))
-            cardsPlayedInround.append(cardPlayed)
+        
+        cardsPlayedInround.append(cardPlayed)
+
         print(player.name + " played " + cardPlayed.name)
 
     roundPoints, winnerId = calculate_round_points(cardsPlayedInround, game.trump.suit)
+
     playerWinnerOfRound = game.playersOrder[winnerId]
-    playerWinnerOfRound.team.score += roundPoints 
+    playerWinnerOfRound.team.score += roundPoints
+
+    print(playerWinnerOfRound.name + " wins the round")
+
     game.playersOrder = rotate_order_to_winner(game.playersOrder, playerWinnerOfRound)
 
 def play_game(strategy):
@@ -175,7 +175,7 @@ def play_game(strategy):
         return 1
     
     game = create_game(strategy)
-    game.deck = create_deck()
+
     hand_cards(game)
 
     for player in game.playersOrder:
@@ -183,20 +183,21 @@ def play_game(strategy):
         for card in player.hand:
             print(card.name)
         print("\n")
-    print(game.trump.name)
+    print(f'Trump card: {game.trump.name}')
 
-    num_rounds = 0
     for num_rounds in range(10):
-        print("Round " + str(num_rounds + 1) + ":")
+        print("\nRound " + str(num_rounds + 1) + ":")
         play_round(game)
 
-    print("Team 1 score: " + str(game.teams[0].score))
-    print("Team 2 score: " + str(game.teams[1].score))
+    print("\nSporting score: " + str(game.teams[0].score))
+    print("Benfica score: " + str(game.teams[1].score))
+
     if game.teams[0].score > game.teams[1].score:
-        print("Team 1 wins!")
+        print("Sporting wins!")
     elif game.teams[0].score == game.teams[1].score:
         print("It's a tie!")
     else:
-        print("Team 2 wins!")
+        print("Benfica wins!")
+
 
 play_game('random')
