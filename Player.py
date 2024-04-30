@@ -1,12 +1,13 @@
-'''
-    Player ->
-        - name: player name
-        - hand: list of Card objects the player has (initially 10)
-        - team: team object to which the player belongs
-        - add_card(card): add card to player hand and sort it by order
-        - get_cards_by_suit(suit): get all cards of a given suit
-'''
 class Player:
+    '''
+        Player ->
+            - name: player name
+            - hand: list of Card objects the player has (initially 10)
+            - team: team object to which the player belongs
+            - add_card(card): add card to player hand and sort it by order
+            - get_cards_by_suit(suit): get all cards of a given suit
+    '''
+
     def __init__ (self, name, team) -> None:
         self.name = name 
         self.hand = []
@@ -23,3 +24,4 @@ class Player:
                 filtered_hand.append(card)
 
         return filtered_hand
+    

@@ -1,11 +1,12 @@
-''' 
-    Team ->
-        - name: team name
-        - players: list of Player objects
-        - score: team score (0 - 120)
-        - add_player(player): add player to team
-'''
 class Team:
+    ''' 
+        Team ->
+            - name: team name
+            - players: list of Player objects
+            - score: team score (0 - 120)
+            - add_player(player): add player to team
+    '''
+    
     def __init__ (self, name) -> None:
         self.name = name
         self.players = []

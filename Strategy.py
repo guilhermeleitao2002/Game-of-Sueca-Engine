@@ -2,9 +2,13 @@ from Player import Player
 from random import randint
 from Card import Card
 
-# class randomstrategy that extends player
-
 class RandomPlayer (Player):
+    '''
+        RandomPlayer ->
+            - name: player name
+            - team: team object to which the player belongs
+            - play_round(i, cards_played, round_suit): play a round of the game
+    '''
     def __init__ (self, name, team) -> None:
         super().__init__(name, team)
 

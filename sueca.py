@@ -3,9 +3,10 @@
 #####################################################################################################
 
 from Card import Card
-import Strategy
 from Team import Team
 from Game import Game
+
+import Strategy
 
 from random import randint, shuffle, choice
 
@@ -147,10 +148,10 @@ def play_round(game) -> None:
         Rotate the players order list
     '''
 
-    roundSuit = ''
-    cardsPlayedInround = []
     print('\n')
 
+    roundSuit = ''
+    cardsPlayedInround = []
     for i, player in enumerate(game.playersOrder):
         player.play_round(i, cardsPlayedInround, roundSuit)
 
