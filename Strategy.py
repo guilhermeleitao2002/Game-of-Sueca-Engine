@@ -28,3 +28,8 @@ class RandomPlayer (Player):
 
         print(self.name + " played " + cardPlayed.name)
         return cardPlayed
+    
+    def get_strategy(self) -> str:
+        return 'Random Strategy'
+
+### TODO: Implement more strategies

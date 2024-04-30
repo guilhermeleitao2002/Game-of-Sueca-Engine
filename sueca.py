@@ -26,10 +26,14 @@ def create_game(strategy) -> Game:
     team1 = Team("Sporting")
     team2 = Team("Benfica")
 
-    player1 = Strategy.RandomPlayer("Leitão", team1)
-    player2 = Strategy.RandomPlayer("Fred", team1)
-    player3 = Strategy.RandomPlayer("Pedro", team2)
-    player4 = Strategy.RandomPlayer("Sebas", team2)
+    match strategy:
+        case 'random':
+            player1 = Strategy.RandomPlayer("Leitão", team1)
+            player2 = Strategy.RandomPlayer("Fred", team1)
+            player3 = Strategy.RandomPlayer("Pedro", team2)
+            player4 = Strategy.RandomPlayer("Sebas", team2)
+        case _:
+            raise ValueError("Invalid strategy")
 
     team1.add_player(player1)
     team1.add_player(player2)
@@ -172,10 +176,6 @@ def play_game(strategy) -> None:
         Play 10 rounds
         Print the final score and winner
     '''
-
-    if strategy != 'random':  ### Implement function for separate strategy
-        print('Please provide a supported strategy')
-        return 1
     
     game = create_game(strategy)
 
