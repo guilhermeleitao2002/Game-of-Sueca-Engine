@@ -2,11 +2,12 @@
 ############################################# Libraries #############################################
 #####################################################################################################
 
-from random import shuffle, randint, choice
 from Card import Card
-from Player import Player
+import Strategy
 from Team import Team
 from Game import Game
+
+from random import randint, shuffle, choice
 
 
 #####################################################################################################
@@ -24,10 +25,10 @@ def create_game(strategy) -> Game:
     team1 = Team("Sporting")
     team2 = Team("Benfica")
 
-    player1 = Player("Leitão", team1)
-    player2 = Player("Fred", team1)
-    player3 = Player("Pedro", team2)
-    player4 = Player("Sebas", team2)
+    player1 = Strategy.RandomPlayer("Leitão", team1)
+    player2 = Strategy.RandomPlayer("Fred", team1)
+    player3 = Strategy.RandomPlayer("Pedro", team2)
+    player4 = Strategy.RandomPlayer("Sebas", team2)
 
     team1.add_player(player1)
     team1.add_player(player2)
@@ -151,20 +152,7 @@ def play_round(game) -> None:
     print('\n')
 
     for i, player in enumerate(game.playersOrder):
-        if i == 0:
-            cardPlayed = player.hand.pop(randint(0, len(player.hand) - 1))
-            roundSuit = cardPlayed.suit
-        else:
-            cardsOfTheSameSuit = player.get_cards_by_suit(roundSuit)
-            if len(cardsOfTheSameSuit) != 0:
-                cardPlayed = cardsOfTheSameSuit[randint(0, len(cardsOfTheSameSuit) - 1)]
-                player.hand.remove(cardPlayed)
-            else:
-                cardPlayed = player.hand.pop(randint(0, len(player.hand) - 1))
-        
-        cardsPlayedInround.append(cardPlayed)
-
-        print(player.name + " played " + cardPlayed.name)
+        player.play_round(i, cardsPlayedInround, roundSuit)
 
     roundPoints, winnerId = calculate_round_points(cardsPlayedInround, game.trump.suit)
 
@@ -183,7 +171,7 @@ def play_game(strategy) -> None:
         Play 10 rounds
         Print the final score and winner
     '''
-    
+
     if strategy != 'random':  ### Implement function for separate strategy
         print('Please provide a supported strategy')
         return 1
