@@ -18,6 +18,9 @@ class Game:
         self.playersOrder = []
         self.deck = []
         self.trump = None
+        self.game_info = {}
+        self.game_info["Teams"] = []
+        self.game_info["Rounds"] = {}
 
         team1 = Team("Sporting")
         team2 = Team("Benfica")
@@ -37,6 +40,8 @@ class Game:
         team1.add_player(player2)
         team2.add_player(player3)
         team2.add_player(player4)
+        
+        # Update Teams Info
 
         # randomize players and team to start
         shuffle(team1.players)
@@ -118,15 +123,19 @@ class Game:
                     if j == 9:                      ## Last card
                         self.trump = card
 
-    def play_round(self) -> None:
+    def play_round(self) -> dict:
         print('\n')
 
         roundSuit = ''
+        round_info = {}
         cardsPlayedInround = []
         for i, player in enumerate(self.playersOrder):
             player.play_round(i, cardsPlayedInround, roundSuit)
 
         roundPoints, winnerId = self.calculate_round_points(cardsPlayedInround, self.trump.suit)
+
+        round_info["Winner"] = self.playersOrder[winnerId].name
+        round_info["Points"] = roundPoints
 
         playerWinnerOfRound = self.playersOrder[winnerId]
         playerWinnerOfRound.team.score += roundPoints
@@ -134,6 +143,8 @@ class Game:
         print(playerWinnerOfRound.name + " wins the round")
 
         self.playersOrder = self.rotate_order_to_winner(self.playersOrder, playerWinnerOfRound)
+
+        return round_info
 
 
     def play_game(self) -> None:
@@ -147,11 +158,13 @@ class Game:
 
         for num_rounds in range(10):
             print("\nRound " + str(num_rounds + 1) + ":")
-            self.play_round()
+            round_info = self.play_round()
+            (self.game_info["Rounds"])[num_rounds + 1] = round_info
 
         print("\nSporting score: " + str(self.teams[0].score))
         print("Benfica score: " + str(self.teams[1].score))
 
+        self.game_info["Teams"] = [self.teams[0].dump_to_json(), self.teams[1].dump_to_json()]
         if self.teams[0].score > self.teams[1].score:
             print("Sporting wins!")
         elif self.teams[0].score == self.teams[1].score:
