@@ -14,14 +14,22 @@ class Player:
         self.team = team
 
     def add_card(self, card) -> None:
+        '''
+            Add card to player hand and sort it by order to facilitate strategy implementation
+        '''
+
         self.hand.append(card)
         self.hand = sorted(self.hand, key=lambda x: x.order)
 
     def get_cards_by_suit(self, suit) -> list:
+        '''
+            Get all cards of a given suit
+        '''
+
         filtered_hand = []
+        # For each card
         for card in self.hand:
             if card.suit == suit:
                 filtered_hand.append(card)
 
         return filtered_hand
-    

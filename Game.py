@@ -11,56 +11,77 @@ class Game:
             - playersOrder: list of Player objects sorted by order to play
             - deck: list of Card objects
             - trump: trump card for that game
+            - game_info: dictionary with game information
     '''
 
     def __init__ (self, strategy) -> None:
         self.strategy = strategy
-        self.playersOrder = []
-        self.deck = []
         self.trump = None
+
+        # Initialize game information
         self.game_info = {}
         self.game_info["Teams"] = []
         self.game_info["Rounds"] = {}
 
+        # Create teams
         team1 = Team("Sporting")
         team2 = Team("Benfica")
-
         self.teams = [team1, team2]
 
+        # Create players based on strategy type
         match strategy:
             case 'random':
-                player1 = Strategy.RandomPlayer("Leitão", team1)
+                player1 = Strategy.RandomPlayer("Leitao", team1)
                 player2 = Strategy.RandomPlayer("Fred", team1)
                 player3 = Strategy.RandomPlayer("Pedro", team2)
                 player4 = Strategy.RandomPlayer("Sebas", team2)
-            case _:
+            case _: # default
                 raise ValueError("Invalid strategy")
 
+        # Add players to teams
         team1.add_player(player1)
         team1.add_player(player2)
         team2.add_player(player3)
         team2.add_player(player4)
         
-        # Update Teams Info
-
-        # randomize players and team to start
+        # Randomize players and team to start
         shuffle(team1.players)
         shuffle(team2.players)
         first_team = choice([team1, team2])
         second_team = team2 if first_team is team1 else team1
+        
+        # Order players
         self.playersOrder = [player for pair in zip(first_team.players, second_team.players) for player in pair]
 
+        # Create deck
         self.deck = self.create_deck()
 
     def create_deck(self) -> list:
+        '''
+            Create a deck of 40 cards with the following suits:
+                - hearts
+                - diamonds
+                - clubs
+                - spades
+            and the following ranks:
+                - 2, 3, 4, 5, 6, J, Q, K, 7, A
+            that have the respective values:
+                - 0, 0, 0, 0, 0, 2, 3, 4, 10, 11
+            '''
+
+        # Create deck suits
         suits = ["hearts", "diamonds", "clubs", "spades"]
+        # Create deck ranks
         ranks = ["2", "3", "4", "5", "6", "7", "J", "Q", "K", "A"]
+
         deck = []
         for rank in ranks:
             for suit in suits:
                 card = Card(rank + "_of_" + suit, suit, rank)
                 deck.append(card)
         
+        # Set card "importance"
+        # NOTE: Different from the card value
         order = {
             '2': 0,
             '3': 1,
@@ -73,6 +94,8 @@ class Game:
             '7': 9,
             'A': 10
         }
+
+        # Set card value
         for card in deck:
             if card.rank == 'A':
                 card.value = 11
@@ -91,47 +114,75 @@ class Game:
         return deck
 
     def rotate_order_to_winner(self, playersOrderList, winner) -> list:
-        winner_index = playersOrderList.index(winner)    
+        '''
+            Rotate the list of players to the winner of the round
+        '''
+
+        winner_index = playersOrderList.index(winner)
         rotated_list = playersOrderList[winner_index:] + playersOrderList[:winner_index]
 
         return rotated_list
     
     def calculate_round_points(self, cardsPlayedInRound, gameTrumpSuit) -> tuple:
+        '''
+            Calculate the points and the winner of the round
+        '''
+
+        # Initialize winning card to the first card played
         winningCard = (cardsPlayedInRound[0], 0)
 
+        # For each card played in the round
         for i, card in enumerate(cardsPlayedInRound):
-            if i == 0:
+            if i == 0:  # Skip first card (it's the winning card so far)
                 continue
 
+            # If the card is of the same suit as the winning card and has a higher order or
+            # if the card is of the trump suit and the winning card is not then
+            # the card is the new winning card
             if card.suit == winningCard[0].suit and card.order > winningCard[0].order or\
                 card.suit == gameTrumpSuit and winningCard[0].suit != gameTrumpSuit:
                 winningCard = (card, i)
 
+        # Accumulate the points of the round
         roundPoints = 0
         for card in cardsPlayedInRound:
             roundPoints += card.value
 
         return roundPoints, winningCard[1]
 
-
     def hand_cards(self) -> None:
+        '''
+            Distribute the cards between the players
+        '''
+
+        # For each player
         for i, player in enumerate(self.playersOrder):
+            # For each card
             for j in range(10):
+                # Pop a card at random
                 card = self.deck.pop(randint(0, len(self.deck) - 1))
                 player.add_card(card)
-                if i == len(self.playersOrder) - 1: ## Last player
-                    if j == 9:                      ## Last card
-                        self.trump = card
+
+                if i == len(self.playersOrder) - 1: # Last player
+                    if j == 9:                      # Last card
+                        self.trump = card           # Is the trump
 
     def play_round(self) -> dict:
+        '''
+            Play a round of the game
+        '''
+
         print('\n')
 
         roundSuit = ''
         round_info = {}
         cardsPlayedInround = []
+
+        # For each player
         for i, player in enumerate(self.playersOrder):
             player.play_round(i, cardsPlayedInround, roundSuit)
 
+        # Get the total points played in the round and the respective winner
         roundPoints, winnerId = self.calculate_round_points(cardsPlayedInround, self.trump.suit)
 
         round_info["Winner"] = self.playersOrder[winnerId].name
@@ -142,28 +193,34 @@ class Game:
 
         print(playerWinnerOfRound.name + " wins the round")
 
+        # Rotate the players order to the winner of the round
         self.playersOrder = self.rotate_order_to_winner(self.playersOrder, playerWinnerOfRound)
 
         return round_info
 
-
     def play_game(self) -> None:
+        '''
+            Play the game of Sueca
+        '''
 
+        # For each player
         for player in self.playersOrder:
             print(player.name)
+            # For each card
             for card in player.hand:
                 print(card.name)
             print("\n")
         print(f'Trump card: {self.trump.name}')
 
+        # For each of the 10 rounds
         for num_rounds in range(10):
             print("\nRound " + str(num_rounds + 1) + ":")
             round_info = self.play_round()
             (self.game_info["Rounds"])[num_rounds + 1] = round_info
 
+        # Print the final game details
         print("\nSporting score: " + str(self.teams[0].score))
         print("Benfica score: " + str(self.teams[1].score))
-
         self.game_info["Teams"] = [self.teams[0].dump_to_json(), self.teams[1].dump_to_json()]
         if self.teams[0].score > self.teams[1].score:
             print("Sporting wins!")
