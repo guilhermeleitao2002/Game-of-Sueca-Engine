@@ -1,7 +1,7 @@
 from random import randint, shuffle, choice
 from Card import Card
 from Team import Team
-from Player import RandomPlayer, PredictorPlayer
+from Player import RandomPlayer, PredictorPlayer, Player
 
 class Game:
     '''
@@ -61,7 +61,7 @@ class Game:
         # Create deck
         self.deck = self.create_deck()
 
-    def create_deck(self) -> list:
+    def create_deck(self) -> list[Card]:
         '''
             Create a deck of 40 cards with the following suits:
                 - hearts
@@ -118,7 +118,7 @@ class Game:
 
         return deck
 
-    def rotate_order_to_winner(self, playersOrderList, winner) -> list:
+    def rotate_order_to_winner(self, playersOrderList, winner) -> list[Player]:
         '''
             Rotate the list of players to the winner of the round
         '''
@@ -128,7 +128,7 @@ class Game:
 
         return rotated_list
     
-    def calculate_round_points(self, cardsPlayedInRound, gameTrumpSuit) -> tuple:
+    def calculate_round_points(self, cardsPlayedInRound, gameTrumpSuit) -> tuple[int, int]:
         '''
             Calculate the points and the winner of the round
         '''
@@ -183,7 +183,7 @@ class Game:
 
         return
     
-    def play_round(self) -> dict:
+    def play_round(self) -> dict[str, str]:
         '''
             Play a round of the game
         '''

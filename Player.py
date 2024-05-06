@@ -1,4 +1,3 @@
-from Player import Player
 from random import randint
 from Card import Card
 
@@ -125,6 +124,7 @@ class PredictorPlayer (Player):
                 index = self.card_ordering_index[card.name]
                 self.beliefs[player][index] = 0
 
+            # If the card is not of the round suit, update the beliefs of the player that played the card
             if card.suit != round_suit:
                 print(f"Player {self.name} noticed that {player_name} does not have any more {round_suit}!!!")
 
@@ -143,7 +143,7 @@ class PredictorPlayer (Player):
                 for i in range(10):
                     player[i*4 + j] = 0
 
-    def play_round(self, i, cards_played, round_suit) -> Card:
+    def play_round(self, i, cards_played, round_suit) -> tuple[Card, str]:
         '''
             Play a round of the game of Sueca, selecting a card at random in each round
         '''

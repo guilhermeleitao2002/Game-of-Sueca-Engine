@@ -19,7 +19,7 @@ class Team:
 
         self.players.append(player)
 
-    def dump_to_json(self) -> dict:
+    def dump_to_json(self) -> dict[str, any]:
         '''
             Dump the team information to a dictionary
         '''
