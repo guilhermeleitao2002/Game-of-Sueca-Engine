@@ -1,5 +1,6 @@
 from random import randint
 from Card import Card
+import Game
 
 class Player:
     '''
@@ -49,7 +50,7 @@ class RandomPlayer (Player):
     def __init__ (self, name, team) -> None:
         super().__init__(name, team)
 
-    def play_round(self, i, cards_played, round_suit) -> Card:
+    def play_round(self, i, cards_played, round_suit, players_order) -> Card:
         '''
             Play a round of the game of Sueca, selecting a card at random in each round
         '''
@@ -69,15 +70,7 @@ class RandomPlayer (Player):
 
         print(self.name + " played " + cardPlayed.name)
 
-        return cardPlayed
-    
-    def update_beliefs(self, card_played) -> None:
-        '''
-            Update the beliefs of the player
-            DOES NOT APPLY TO THIS STRATEGY
-        '''
-
-        return
+        return cardPlayed, round_suit
 
     def get_strategy(self) -> str:
         '''
@@ -86,7 +79,103 @@ class RandomPlayer (Player):
         '''
         return 'Random Agent'
 
+class MaximizePointsPlayer(Player):
 
+    def __init__ (self, name, team) -> None:
+        super().__init__(name, team)
+
+    def play_round(self, i, cards_played, round_suit, players_order, game) -> Card:
+        if i == 0:
+            cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
+            round_suit = cardPlayed.suit
+        else:
+            cardsOfTheSameSuit = self.get_cards_by_suit(round_suit)
+            _, winner = game.calculate_round_points(cards_played, round_suit)
+            player_winner = players_order[winner[1]]
+            if player_winner.team == self.team:    ### if the same team
+                if cardsOfTheSameSuit:                  ### play strongest card from same suit
+                    cardPlayed = cardsOfTheSameSuit[-1]
+                    self.hand.remove(cardPlayed) 
+                else:                                               
+                    cardPlayed = self.hand[-1]  ### else play strongest from another suit
+                    self.hand.remove(cardPlayed)
+            else:                                   ### if different team
+                if cardsOfTheSameSuit:                 ## if have cards from suit
+                    cardPlayed = cardsOfTheSameSuit[-1]
+                    if cardPlayed.order > winner[0].order:    ### if can win
+                        self.hand.remove(cardPlayed)        ## play strongest card
+                    else:
+                        cardPlayed = cardsOfTheSameSuit[0]       ## else play weakest card
+                        self.hand.remove(cardPlayed) 
+                else:
+                    trumpCards = self.get_cards_by_suit(game.trump.suit)
+                    if trumpCards:                      ## if has trump, play the strongest trump card
+                        cardPlayed = trumpCards[-1]
+                        self.hand.remove(cardPlayed)
+                    else:
+                        cardPlayed = self.hand[0]  ## play weakest card
+                        self.hand.remove(cardPlayed) 
+        
+        print(cardPlayed.name)
+        cards_played.append(cardPlayed)
+        return cardPlayed, round_suit
+            
+    def get_strategy(self) -> str:
+            '''
+                Return the strategy of the player
+            '''
+            return 'Maximize Points Won'
+
+class MaximizeRoundsWonPlayer(Player):
+
+    def __init__ (self, name, team) -> None:
+        super().__init__(name, team)
+
+    def play_round(self, i, cards_played, round_suit, players_order, game) -> Card:
+        if i == 0:
+            cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
+            round_suit = cardPlayed.suit
+        else:
+            cardsOfTheSameSuit = self.get_cards_by_suit(round_suit)
+            _, winner = game.calculate_round_points(cards_played, round_suit)
+            player_winner = players_order[winner[1]]
+            if player_winner.team == self.team:    ### if the same team
+                if cardsOfTheSameSuit:                  ### play weakest card from the same suit 
+                    cardPlayed = cardsOfTheSameSuit[0]  ### preserves all strong cards
+                    self.hand.remove(cardPlayed) 
+                else:                                               
+                    cardPlayed = self.hand[0]  ### else play weakest from other suit
+                    self.hand.remove(cardPlayed)
+            else: 
+                cardPlayed = None                                  ### if different team
+                if cardsOfTheSameSuit:                 ## if have cards from suit
+                    for card in cardsOfTheSameSuit:
+                        if card.order > winner[0].order:   ### Search for the lowest card taht can win
+                            cardPlayed = card
+                            self.hand.remove(card)
+                            break
+                    if not cardPlayed:                  ### if cant win
+                        cardPlayed = cardsOfTheSameSuit[0]       ## play weakest card
+                        self.hand.remove(cardPlayed)                    
+                else:
+                    trumpCards = self.get_cards_by_suit(game.trump.suit)
+                    if trumpCards:                      ## if has trump, play the weakest trump card
+                        cardPlayed = trumpCards[0]
+                        self.hand.remove(cardPlayed)
+                    else:
+                        cardPlayed = self.hand[0]  ## play weakest card
+                        self.hand.remove(cardPlayed) 
+        
+        print(cardPlayed.name)
+        cards_played.append(cardPlayed)
+        return cardPlayed, round_suit
+            
+    def get_strategy(self) -> str:
+            '''
+                Return the strategy of the player
+            '''
+            return 'Maximize Rounds Won'
+    
 class PredictorPlayer (Player):
 
 
@@ -143,7 +232,7 @@ class PredictorPlayer (Player):
                 for i in range(10):
                     player[i*4 + j] = 0
 
-    def play_round(self, i, cards_played, round_suit) -> tuple[Card, str]:
+    def play_round(self, i, cards_played, round_suit, players_order) -> tuple[Card, str]:
         '''
             Play a round of the game of Sueca, selecting a card at random in each round
         '''

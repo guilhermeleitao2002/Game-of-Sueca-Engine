@@ -1,7 +1,7 @@
 from random import randint, shuffle, choice
 from Card import Card
 from Team import Team
-from Player import RandomPlayer, PredictorPlayer, Player
+from Player import RandomPlayer, MaximizePointsPlayer, MaximizeRoundsWonPlayer, PredictorPlayer, Player
 
 class Game:
     '''
@@ -35,6 +35,16 @@ class Game:
                 player2 = RandomPlayer("Fred", team1)
                 player3 = RandomPlayer("Pedro", team2)
                 player4 = RandomPlayer("Sebas", team2)
+            case 'maxpointswon':
+                player1 = MaximizePointsPlayer("Leitao", team1)
+                player2 = MaximizePointsPlayer("Fred", team1)
+                player3 = MaximizePointsPlayer("Pedro", team2)
+                player4 = MaximizePointsPlayer("Sebas", team2)
+            case 'maxroundswon':
+                player1 = MaximizeRoundsWonPlayer("Leitao", team1)
+                player2 = MaximizeRoundsWonPlayer("Fred", team1)
+                player3 = MaximizeRoundsWonPlayer("Pedro", team2)
+                player4 = MaximizeRoundsWonPlayer("Sebas", team2)
             case 'predictor':
                 player1 = PredictorPlayer("Leitao", team1, ["Fred", "Pedro", "Sebas"])
                 player2 = PredictorPlayer("Fred", team1, ["Leitao", "Pedro", "Sebas"])
@@ -153,7 +163,7 @@ class Game:
         for card in cardsPlayedInRound:
             roundPoints += card.value
 
-        return roundPoints, winningCard[1]
+        return roundPoints, winningCard
 
     def hand_cards(self) -> None:
         '''
@@ -196,16 +206,20 @@ class Game:
 
         # For each player
         for i, player in enumerate(self.playersOrder):
-            card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit)
-            self.update_beliefs(card_played, player.name, roundSuit)    # Update beliefs of the players
+            if self.strategy == 'maxpointswon' or self.strategy == 'maxroundswon':
+                card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self)
+            else:
+                card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder)
+            if self.strategy == 'predictor':
+                self.update_beliefs(card_played, player.name, roundSuit)    # Update beliefs of the players
 
         # Get the total points played in the round and the respective winner
         roundPoints, winnerId = self.calculate_round_points(cardsPlayedInround, self.trump.suit)
 
-        round_info["Winner"] = self.playersOrder[winnerId].name
+        round_info["Winner"] = self.playersOrder[winnerId[1]].name
         round_info["Points"] = roundPoints
 
-        playerWinnerOfRound = self.playersOrder[winnerId]
+        playerWinnerOfRound = self.playersOrder[winnerId[1]]
         playerWinnerOfRound.team.score += roundPoints
 
         print(playerWinnerOfRound.name + " wins the round")
