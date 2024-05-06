@@ -11,7 +11,7 @@ if __name__ == "__main__":
     output_file = sys.argv[1]
 
     # Initialize the game
-    game = Game('random')
+    game = Game(sys.argv[2])
 
     # Distribute the cards
     game.hand_cards()

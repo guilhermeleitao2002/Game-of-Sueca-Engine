@@ -35,6 +35,11 @@ class Game:
                 player2 = Strategy.RandomPlayer("Fred", team1)
                 player3 = Strategy.RandomPlayer("Pedro", team2)
                 player4 = Strategy.RandomPlayer("Sebas", team2)
+            case 'predictor':
+                player1 = Strategy.PredictorPlayer("Leitao", team1, ["Fred", "Pedro", "Sebas"])
+                player2 = Strategy.PredictorPlayer("Fred", team1, ["Leitao", "Pedro", "Sebas"])
+                player3 = Strategy.PredictorPlayer("Pedro", team2, ["Sebas", "Leitao", "Fred"])
+                player4 = Strategy.PredictorPlayer("Sebas", team2, ["Pedro", "Leitao", "Fred"])
             case _: # default
                 raise ValueError("Invalid strategy")
 
@@ -167,6 +172,17 @@ class Game:
                     if j == 9:                      # Last card
                         self.trump = card           # Is the trump
 
+    def update_beliefs(self, cardPlayed, player_name, round_suit) -> None:
+        '''
+            Update the beliefs of the players except the one that played the card (no need!)
+        '''
+
+        for player in self.playersOrder:
+            if player.name != player_name:
+                player.update_beliefs(cardPlayed, round_suit, player_name)
+
+        return
+    
     def play_round(self) -> dict:
         '''
             Play a round of the game
@@ -180,7 +196,8 @@ class Game:
 
         # For each player
         for i, player in enumerate(self.playersOrder):
-            player.play_round(i, cardsPlayedInround, roundSuit)
+            card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit)
+            self.update_beliefs(card_played, player.name, roundSuit)    # Update beliefs of the players
 
         # Get the total points played in the round and the respective winner
         roundPoints, winnerId = self.calculate_round_points(cardsPlayedInround, self.trump.suit)
