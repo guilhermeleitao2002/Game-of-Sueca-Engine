@@ -43,13 +43,13 @@ class Game:
         team1.add_player(player2)
         team2.add_player(player3)
         team2.add_player(player4)
-        
+
         # Randomize players and team to start
         shuffle(team1.players)
         shuffle(team2.players)
         first_team = choice([team1, team2])
         second_team = team2 if first_team is team1 else team1
-        
+
         # Order players
         self.playersOrder = [player for pair in zip(first_team.players, second_team.players) for player in pair]
 
@@ -79,7 +79,7 @@ class Game:
             for suit in suits:
                 card = Card(rank + "_of_" + suit, suit, rank)
                 deck.append(card)
-        
+
         # Set card "importance"
         # NOTE: Different from the card value
         order = {
@@ -180,7 +180,10 @@ class Game:
 
         # For each player
         for i, player in enumerate(self.playersOrder):
-            player.play_round(i, cardsPlayedInround, roundSuit)
+            card_palyed = player.play_round(i, cardsPlayedInround, roundSuit)
+            if not roundSuit:
+                roundSuit  = card_palyed.suit
+            print("roundSuit: " + roundSuit + ";")
 
         # Get the total points played in the round and the respective winner
         roundPoints, winnerId = self.calculate_round_points(cardsPlayedInround, self.trump.suit)
