@@ -1,7 +1,7 @@
 from random import randint, shuffle, choice
-import Strategy
 from Card import Card
 from Team import Team
+from Player import RandomPlayer, PredictorPlayer
 
 class Game:
     '''
@@ -31,15 +31,15 @@ class Game:
         # Create players based on strategy type
         match strategy:
             case 'random':
-                player1 = Strategy.RandomPlayer("Leitao", team1)
-                player2 = Strategy.RandomPlayer("Fred", team1)
-                player3 = Strategy.RandomPlayer("Pedro", team2)
-                player4 = Strategy.RandomPlayer("Sebas", team2)
+                player1 = RandomPlayer("Leitao", team1)
+                player2 = RandomPlayer("Fred", team1)
+                player3 = RandomPlayer("Pedro", team2)
+                player4 = RandomPlayer("Sebas", team2)
             case 'predictor':
-                player1 = Strategy.PredictorPlayer("Leitao", team1, ["Fred", "Pedro", "Sebas"])
-                player2 = Strategy.PredictorPlayer("Fred", team1, ["Leitao", "Pedro", "Sebas"])
-                player3 = Strategy.PredictorPlayer("Pedro", team2, ["Sebas", "Leitao", "Fred"])
-                player4 = Strategy.PredictorPlayer("Sebas", team2, ["Pedro", "Leitao", "Fred"])
+                player1 = PredictorPlayer("Leitao", team1, ["Fred", "Pedro", "Sebas"])
+                player2 = PredictorPlayer("Fred", team1, ["Leitao", "Pedro", "Sebas"])
+                player3 = PredictorPlayer("Pedro", team2, ["Sebas", "Leitao", "Fred"])
+                player4 = PredictorPlayer("Sebas", team2, ["Pedro", "Leitao", "Fred"])
             case _: # default
                 raise ValueError("Invalid strategy")
 
