@@ -9,9 +9,11 @@ from Game import Game
 
 if __name__ == "__main__":
     output_file = sys.argv[1]
+    team_1_strategy = sys.argv[2]
+    team_2_strategy = sys.argv[3]
 
     # Initialize the game
-    game = Game(sys.argv[2])
+    game = Game(team_1_strategy, team_2_strategy)
 
     # Distribute the cards
     game.hand_cards()
