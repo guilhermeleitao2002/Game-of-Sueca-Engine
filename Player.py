@@ -252,10 +252,10 @@ class MaximizeRoundsWonPlayer(Player):
         return cardPlayed, round_suit
 
     def get_strategy(self) -> str:
-         '''
-                Return the strategy of the player
-            '''
-          return 'Maximize Rounds Won'
+        '''
+            Return the strategy of the player
+        '''
+        return 'Maximize Rounds Won'
 
 
 class PredictorPlayer (Player):
@@ -285,35 +285,35 @@ class PredictorPlayer (Player):
                                                         0.33 for _ in range(40)], others[2]: [0.33 for _ in range(40)]}
 
     def update_beliefs(self, card, round_suit, player_name) -> None:
-         '''
-                The card was seen so we now know that no player no longer has it
-            '''
+        '''
+            The card was seen so we now know that no player no longer has it
+        '''
 
-          # Update the beliefs of the other players
-          print(f"Player {self.name} saw {card.name}")
-           for player in self.beliefs:
-                index = self.card_ordering_index[card.name]
-                self.beliefs[player][index] = 0
+        # Update the beliefs of the other players
+        print(f"Player {self.name} saw {card.name}")
+        for player in self.beliefs:
+            index = self.card_ordering_index[card.name]
+            self.beliefs[player][index] = 0
 
-            # If the card is not of the round suit, update the beliefs of the player that played the card
-            if card.suit != round_suit:
-                print(
-                    f"Player {self.name} noticed that {player_name} does not have any more {round_suit}!!!")
+        # If the card is not of the round suit, update the beliefs of the player that played the card
+        if card.suit != round_suit:
+            print(
+                f"Player {self.name} noticed that {player_name} does not have any more {round_suit}!!!")
 
-                player = self.beliefs[player_name]
+            player = self.beliefs[player_name]
 
-                match round_suit:
-                    case "hearts":
-                        j = 0
-                    case "diamonds":
-                        j = 1
-                    case "spades":
-                        j = 2
-                    case "clubs":
-                        j = 3
+            match round_suit:
+                case "hearts":
+                    j = 0
+                case "diamonds":
+                    j = 1
+                case "spades":
+                    j = 2
+                case "clubs":
+                    j = 3
 
-                for i in range(10):
-                    player[i*4 + j] = 0
+            for i in range(10):
+                player[i*4 + j] = 0
 
     def play_round(self, i, cards_played, round_suit, players_order) -> tuple[Card, str]:
         '''
