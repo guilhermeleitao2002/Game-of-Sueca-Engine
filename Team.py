@@ -1,5 +1,8 @@
+from Player import Player
+
+
 class Team:
-    ''' 
+    '''
         Team ->
             - name: team name
             - players: list of Player objects
@@ -7,12 +10,12 @@ class Team:
             - add_player(player): add player to team
     '''
 
-    def __init__ (self, name) -> None:
+    def __init__(self, name) -> None:
         self.name = name
         self.players = []
         self.score = 0
 
-    def add_player(self, player) -> None:
+    def add_player(self, player: Player) -> None:
         '''
             Add player to the team
         '''
@@ -34,5 +37,5 @@ class Team:
             player_info["strategy"] = player.get_strategy()
             team['players'].append(player_info)
         team['score'] = self.score
-        
+
         return team
