@@ -200,9 +200,6 @@ class Game:
                     if j == 9:                      # Last card
                         self.trump = card           # Is the trump
 
-        for player in self.playersOrder:
-            print(player.beliefs)
-
     def update_beliefs(self, cardPlayed, round_suit, player_name) -> None:
         '''
             Update the beliefs of the players except the one that played the card (no need!)

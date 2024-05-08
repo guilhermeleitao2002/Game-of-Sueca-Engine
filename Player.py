@@ -223,26 +223,23 @@ class BeliefPlayer(Player):
             index = self.card_ordering_index[card.name]
             self.beliefs[player][index] = 0
 
-            # If the card is not of the round suit, update the beliefs of the
-            # player that played the card
-            if card.suit != round_suit:
-                print(
-                    f"Player {self.name} noticed that {player} does not have any more {round_suit}!!!")
+        # If the card is not of the round suit, update the beliefs of the
+        # player that played the card
+        if card.suit != round_suit:
+            print(f"Player {self.name} noticed that {player_name} does not have any more {round_suit}!!!")
 
-                match round_suit:
-                    case "hearts":
-                        j = 0
-                    case "diamonds":
-                        j = 1
-                    case "spades":
-                        j = 2
-                    case "clubs":
-                        j = 3
+            match round_suit:
+                case "hearts":
+                    j = 0
+                case "diamonds":
+                    j = 1
+                case "spades":
+                    j = 2
+                case "clubs":
+                    j = 3
 
-                print("Round Suit: " + round_suit)
-                for i in range(10):
-                    self.beliefs[player][i*4 + j] = 0
-        print(self.beliefs)
+            for i in range(10):
+                self.beliefs[player][i*4 + j] = 0
 
     # For immediately after the cards are handed
     def update_beliefs_initial(self, card) -> None:
