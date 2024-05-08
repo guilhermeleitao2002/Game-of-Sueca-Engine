@@ -325,6 +325,7 @@ class PredictorPlayer(Player):
         self.beliefs = {others[0]: [0.33 for _ in range(40)], others[1]: [
                                                         0.33 for _ in range(40)], others[2]: [0.33 for _ in range(40)]}
 
+    # For during the game
     def update_beliefs(self, card, round_suit, player_name) -> None:
         '''
             The card was seen so we now know that no player no longer has it
@@ -355,6 +356,16 @@ class PredictorPlayer(Player):
 
             for i in range(10):
                 player[i*4 + j] = 0
+
+    # For immediately after the cards are handed
+    def update_beliefs_initial(self, card) -> None:
+        '''
+            Update the beliefs of the player after the initial handing of cards
+        '''
+
+        for player in self.beliefs:
+            index = self.card_ordering_index[card]
+            self.beliefs[player][index] = 0
 
     def play_round(self, i, cards_played, round_suit, players_order) -> tuple[Card, str]:
         '''

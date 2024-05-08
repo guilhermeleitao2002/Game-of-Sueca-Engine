@@ -41,15 +41,11 @@ class Game:
                 player1 = MaximizeRoundsWonPlayer("Leitao", team1)
                 player2 = MaximizeRoundsWonPlayer("Fred", team1)
             case 'predictor':
-                player1 = PredictorPlayer(
-                    "Leitao", team1, ["Fred", "Pedro", "Sebas"])
-                player2 = PredictorPlayer(
-                    "Fred", team1, ["Leitao", "Pedro", "Sebas"])
+                player1 = PredictorPlayer("Leitao", team1, ["Fred", "Pedro", "Sebas"])
+                player2 = PredictorPlayer("Fred", team1, ["Leitao", "Pedro", "Sebas"])
             case 'cooperative':
-                player1 = CooperativePlayer(
-                    "Leitao", team1, ["Fred", "Pedro", "Sebas"])
-                player2 = CooperativePlayer(
-                    "Fred", team1, ["Leitao", "Pedro", "Sebas"])
+                player1 = CooperativePlayer("Leitao", team1, ["Fred", "Pedro", "Sebas"])
+                player2 = CooperativePlayer("Fred", team1, ["Leitao", "Pedro", "Sebas"])
             case _:  # default
                 raise ValueError("Invalid strategy")
 
@@ -64,15 +60,11 @@ class Game:
                 player3 = MaximizeRoundsWonPlayer("Pedro", team2)
                 player4 = MaximizeRoundsWonPlayer("Sebas", team2)
             case 'cooperative':
-                player3 = CooperativePlayer(
-                    "Pedro", team2, ["Sebas", "Leitao", "Fred"])
-                player4 = CooperativePlayer(
-                    "Sebas", team2, ["Pedro", "Leitao", "Fred"])
+                player3 = CooperativePlayer("Pedro", team2, ["Sebas", "Leitao", "Fred"])
+                player4 = CooperativePlayer("Sebas", team2, ["Pedro", "Leitao", "Fred"])
             case 'predictor':
-                player3 = PredictorPlayer(
-                    "Pedro", team2, ["Sebas", "Leitao", "Fred"])
-                player4 = PredictorPlayer(
-                    "Sebas", team2, ["Pedro", "Leitao", "Fred"])
+                player3 = PredictorPlayer("Pedro", team2, ["Sebas", "Leitao", "Fred"])
+                player4 = PredictorPlayer("Sebas", team2, ["Pedro", "Leitao", "Fred"])
             case _:  # default
                 raise ValueError("Invalid strategy")
 
@@ -89,8 +81,7 @@ class Game:
         second_team = team2 if first_team is team1 else team1
 
         # Order players
-        self.playersOrder = [player for pair in zip(
-            first_team.players, second_team.players) for player in pair]
+        self.playersOrder = [player for pair in zip(first_team.players, second_team.players) for player in pair]
 
         # Create deck
         self.deck = self.create_deck()
@@ -202,10 +193,15 @@ class Game:
                 # Pop a card at random
                 card = self.deck.pop(randint(0, len(self.deck) - 1))
                 player.add_card(card)
+                # Update beliefs of the player
+                player.update_beliefs_initial(card.name)
 
                 if i == len(self.playersOrder) - 1:  # Last player
                     if j == 9:                      # Last card
                         self.trump = card           # Is the trump
+
+        for player in self.playersOrder:
+            print(player.beliefs)
 
     def update_beliefs(self, cardPlayed, round_suit, player_name) -> None:
         '''
@@ -213,8 +209,7 @@ class Game:
         '''
 
         for player in self.playersOrder:
-            if player.name != player_name and (player.get_strategy() == 'Deck Predictor'
-                                               or player.get_strategy() == 'Cooperative Player'):
+            if player.name != player_name and (player.get_strategy() == 'Deck Predictor' or player.get_strategy() == 'Cooperative Player'):
                 player.update_beliefs(cardPlayed, round_suit, player_name)
 
         return
@@ -232,25 +227,18 @@ class Game:
 
         # For each player
         for i, player in enumerate(self.playersOrder):
-            print("Name: " + player.name + "; " + "Team: "
-                  + player.team.name + "; " + "Strat: " + player.get_strategy())
             match player.get_strategy():
                 case 'Maximize Points Won' | 'Maximize Rounds Won':
-                    card_played, roundSuit = player.play_round(
-                        i, cardsPlayedInround, roundSuit, self.playersOrder, self)
+                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self)
                 case 'Deck Predictor' | 'Cooperative Player':
                     # Update beliefs of the players
-                    self.update_beliefs(cardsPlayedInround,
-                                        roundSuit, player.name)
-                    card_played, roundSuit = player.play_round(
-                        i, cardsPlayedInround, roundSuit, self.playersOrder, player.name)
+                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder)
+                    self.update_beliefs(card_played, roundSuit, player.name)
                 case _:
-                    card_played, roundSuit = player.play_round(
-                        i, cardsPlayedInround, roundSuit, self.playersOrder)
+                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder)
 
         # Get the total points played in the round and the respective winner
-        roundPoints, winnerId = self.calculate_round_points(
-            cardsPlayedInround, self.trump.suit)
+        roundPoints, winnerId = self.calculate_round_points(cardsPlayedInround, self.trump.suit)
 
         round_info["Winner"] = self.playersOrder[winnerId[1]].name
         round_info["Points"] = roundPoints
@@ -261,8 +249,7 @@ class Game:
         print(playerWinnerOfRound.name + " wins the round")
 
         # Rotate the players order to the winner of the round
-        self.playersOrder = self.rotate_order_to_winner(
-            self.playersOrder, playerWinnerOfRound)
+        self.playersOrder = self.rotate_order_to_winner(self.playersOrder, playerWinnerOfRound)
 
         return round_info
 
@@ -274,6 +261,7 @@ class Game:
         # For each player
         for player in self.playersOrder:
             print(player.name)
+            print(player.get_strategy())
             # For each card
             for card in player.hand:
                 print(card.name)
@@ -289,8 +277,7 @@ class Game:
         # Print the final game details
         print("\nSporting score: " + str(self.teams[0].score))
         print("Benfica score: " + str(self.teams[1].score))
-        self.game_info["Teams"] = [
-            self.teams[0].dump_to_json(), self.teams[1].dump_to_json()]
+        self.game_info["Teams"] = [self.teams[0].dump_to_json(), self.teams[1].dump_to_json()]
         if self.teams[0].score > self.teams[1].score:
             print("Sporting wins!")
         elif self.teams[0].score == self.teams[1].score:
