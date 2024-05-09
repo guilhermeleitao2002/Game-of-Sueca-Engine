@@ -1,3 +1,5 @@
+import copy
+
 from random import randint, shuffle, choice
 from Card import Card
 from Team import Team
@@ -32,39 +34,39 @@ class Game:
         # Create players based on strategy type
         match team_1_strategy:
             case 'random':
-                player1 = RandomPlayer("Leitao", team1)
-                player2 = RandomPlayer("Fred", team1)
+                player1 = RandomPlayer(1, "Leitao", team1)
+                player2 = RandomPlayer(2, "Fred", team1)
             case 'maxpointswon':
-                player1 = MaximizePointsPlayer("Leitao", team1)
-                player2 = MaximizePointsPlayer("Fred", team1)
+                player1 = MaximizePointsPlayer(1, "Leitao", team1)
+                player2 = MaximizePointsPlayer(2, "Fred", team1)
             case 'maxroundswon':
-                player1 = MaximizeRoundsWonPlayer("Leitao", team1)
-                player2 = MaximizeRoundsWonPlayer("Fred", team1)
+                player1 = MaximizeRoundsWonPlayer(1, "Leitao", team1)
+                player2 = MaximizeRoundsWonPlayer(2, "Fred", team1)
             case 'predictor':
-                player1 = PredictorPlayer("Leitao", team1, ["Fred", "Pedro", "Sebas"])
-                player2 = PredictorPlayer("Fred", team1, ["Leitao", "Pedro", "Sebas"])
+                player1 = PredictorPlayer(1, "Leitao", team1, ["Fred", "Pedro", "Sebas"])
+                player2 = PredictorPlayer(2, "Fred", team1, ["Leitao", "Pedro", "Sebas"])
             case 'cooperative':
-                player1 = CooperativePlayer("Leitao", team1, ["Fred", "Pedro", "Sebas"])
-                player2 = CooperativePlayer("Fred", team1, ["Leitao", "Pedro", "Sebas"])
+                player1 = CooperativePlayer(1, "Leitao", team1, ["Fred", "Pedro", "Sebas"])
+                player2 = CooperativePlayer(2, "Fred", team1, ["Leitao", "Pedro", "Sebas"])
             case _:  # default
                 raise ValueError("Invalid strategy")
 
         match team_2_strategy:
             case 'random':
-                player3 = RandomPlayer("Pedro", team2)
-                player4 = RandomPlayer("Sebas", team2)
+                player3 = RandomPlayer(3, "Pedro", team2)
+                player4 = RandomPlayer(4, "Sebas", team2)
             case 'maxpointswon':
-                player3 = MaximizePointsPlayer("Pedro", team2)
-                player4 = MaximizePointsPlayer("Sebas", team2)
+                player3 = MaximizePointsPlayer(3, "Pedro", team2)
+                player4 = MaximizePointsPlayer(4, "Sebas", team2)
             case 'maxroundswon':
-                player3 = MaximizeRoundsWonPlayer("Pedro", team2)
-                player4 = MaximizeRoundsWonPlayer("Sebas", team2)
+                player3 = MaximizeRoundsWonPlayer(3, "Pedro", team2)
+                player4 = MaximizeRoundsWonPlayer(4, "Sebas", team2)
             case 'cooperative':
-                player3 = CooperativePlayer("Pedro", team2, ["Sebas", "Leitao", "Fred"])
-                player4 = CooperativePlayer("Sebas", team2, ["Pedro", "Leitao", "Fred"])
+                player3 = CooperativePlayer(3, "Pedro", team2, ["Sebas", "Leitao", "Fred"])
+                player4 = CooperativePlayer(4, "Sebas", team2, ["Pedro", "Leitao", "Fred"])
             case 'predictor':
-                player3 = PredictorPlayer("Pedro", team2, ["Sebas", "Leitao", "Fred"])
-                player4 = PredictorPlayer("Sebas", team2, ["Pedro", "Leitao", "Fred"])
+                player3 = PredictorPlayer(3, "Pedro", team2, ["Sebas", "Leitao", "Fred"])
+                player4 = PredictorPlayer(4, "Sebas", team2, ["Pedro", "Leitao", "Fred"])
             case _:  # default
                 raise ValueError("Invalid strategy")
 
@@ -118,11 +120,11 @@ class Game:
             '4': 2,
             '5': 3,
             '6': 4,
+            'Q': 5,
             'J': 6,
-            'Q': 7,
-            'K': 8,
-            '7': 9,
-            'A': 10
+            'K': 7,
+            '7': 8,
+            'A': 9
         }
 
         # Set card value
@@ -187,6 +189,7 @@ class Game:
         '''
 
         # For each player
+        deck_copy = copy.deepcopy(self.deck)
         for i, player in enumerate(self.playersOrder):
             # For each card
             for j in range(10):
@@ -194,21 +197,24 @@ class Game:
                 card = self.deck.pop(randint(0, len(self.deck) - 1))
                 player.add_card(card)
                 # Update beliefs of the player
-                player.update_beliefs_initial(card.name)
+                if player.get_strategy() == 'Deck Predictor' or player.get_strategy() == 'Cooperative Player':
+                    player.update_beliefs_initial(card.name)
 
                 if i == len(self.playersOrder) - 1:  # Last player
                     if j == 9:                      # Last card
                         self.trump = card           # Is the trump
-
-    def update_beliefs(self, cardPlayed, round_suit, player_name) -> None:
+            if player.get_strategy() == 'Deck Predictor' or player.get_strategy() == 'Cooperative Player':
+                player.update_beliefs_initial_2(deck_copy)
+            
+    def update_beliefs(self, cardPlayed, round_suit, player_) -> None:
         '''
             Update the beliefs of the players except the one that played the card (no need!)
         '''
-
+        player_name = player_.name
         for player in self.playersOrder:
             if player.name != player_name and (player.get_strategy() == 'Deck Predictor' or player.get_strategy() == 'Cooperative Player'):
                 player.update_beliefs(cardPlayed, round_suit, player_name)
-
+                player.update_beliefs_2(cardPlayed, round_suit, player_)
         return
 
     def play_round(self) -> dict[str, str]:
@@ -230,9 +236,10 @@ class Game:
                 case 'Deck Predictor' | 'Cooperative Player':
                     # Update beliefs of the players
                     card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder)
-                    self.update_beliefs(card_played, roundSuit, player.name)
                 case _:
                     card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder)
+            
+            self.update_beliefs(card_played, roundSuit, player)
 
         # Get the total points played in the round and the respective winner
         roundPoints, winnerId = self.calculate_round_points(cardsPlayedInround, self.trump.suit)

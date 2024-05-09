@@ -14,3 +14,8 @@ class Card:
         self.rank = rank
         self.order = 0
         self.value = 0
+
+    def __eq__(self, value: 'Card') -> bool:
+        return self.name == value.name and self.suit == value.suit and\
+            self.rank == value.rank and self.order == value.order and\
+            self.value == value.value
