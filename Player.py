@@ -42,6 +42,77 @@ class Player:
 
         return filtered_hand
 
+class BeliefPlayer(Player):
+    '''
+        BeliefPlayer ->
+            - name: player name
+            - team: team object to which the player belongs
+            - play_round(i, cards_played, round_suit): play a round of the game
+    '''
+
+    def __init__(self, id, name, team, others) -> None:
+        super().__init__(id, name, team)
+
+        # Store the belief at each timestamp [player, suit, card]
+        self.beliefs = np.ones((4,4,10)) / 3
+        # Set the beliefs of the player itself to 0
+        self.beliefs[self.id - 1] = 0
+
+    def obtain_suit_index(self, suit: str) -> int:
+        '''
+            Returns the index of a given suit
+        '''
+
+        match suit:
+            case "hearts":
+                return 0
+            case "diamonds":
+                return 1
+            case "clubs":
+                return 2
+            case "spades":
+                return 3
+            case _ :
+                raise ValueError("Invalid Suit")
+            
+    def update_beliefs_initial(self, card) -> None:
+        '''
+            Update the beliefs of the player after the initial handing of cards
+        '''
+
+        self.beliefs[:, self.obtain_suit_index(card.suit), card.order] = 0
+        self.beliefs[self.id - 1, self.obtain_suit_index(card.suit), card.order] = 1
+
+    def update_beliefs(self, card: Card, round_suit: str, player: Player) -> None:
+        '''
+            Updates the new belief of the player, after a card has been spotted
+        '''
+
+        print(f"Player {self.name} saw {card.name}")
+        
+        # After a card spotted no one will have it in their hand
+        suit = self.obtain_suit_index(card.suit)
+        self.beliefs[:, suit, card.order] = 0
+
+        if card.suit != round_suit:
+            print(f"Player {self.name} noticed that {player.name} no longer {round_suit}!!!")
+
+            round_suit_index = self.obtain_suit_index(round_suit)
+            # If the card is not of the round suit, the player no longer has any card of the round suit
+            self.beliefs[player.id - 1, round_suit_index, :] = 0
+
+            # Check how many players still have the possibility of having a card of the round suit
+            num_players = np.count_nonzero(self.beliefs[:, round_suit_index, :])
+            if num_players == 0: # Nothing to do
+                return
+
+            # For each player
+            for j in range(4):
+                # For each card
+                for i in range(10):
+                    if self.beliefs[j, round_suit_index, i] != 0:
+                        self.beliefs[j, round_suit_index, i] = 1 / num_players
+
 
 class RandomPlayer (Player):
     '''
@@ -186,78 +257,6 @@ class MaximizeRoundsWonPlayer(Player):
             Return the strategy of the player
         '''
         return 'Maximize Rounds Won'
-
-
-class BeliefPlayer(Player):
-    '''
-        BeliefPlayer ->
-            - name: player name
-            - team: team object to which the player belongs
-            - play_round(i, cards_played, round_suit): play a round of the game
-    '''
-
-    def __init__(self, id, name, team, others) -> None:
-        super().__init__(id, name, team)
-
-        # Store the belief at each timestamp [player, suit, card]
-        self.beliefs = np.ones((4,4,10)) / 3
-        # Set the beliefs of the player itself to 0
-        self.beliefs[self.id - 1] = 0
-
-    def obtain_suit_index(self, suit: str) -> int:
-        '''
-            Returns the index of a given suit
-        '''
-
-        match suit:
-            case "hearts":
-                return 0
-            case "diamonds":
-                return 1
-            case "clubs":
-                return 2
-            case "spades":
-                return 3
-            case _ :
-                raise ValueError("Invalid Suit")
-            
-    def update_beliefs_initial(self, card) -> None:
-        '''
-            Update the beliefs of the player after the initial handing of cards
-        '''
-
-        self.beliefs[:, self.obtain_suit_index(card.suit), card.order] = 0
-        self.beliefs[self.id - 1, self.obtain_suit_index(card.suit), card.order] = 1
-
-    def update_beliefs(self, card: Card, round_suit: str, player: Player) -> None:
-        '''
-            Updates the new belief of the player, after a card has been spotted
-        '''
-
-        print(f"Player {self.name} saw {card.name}")
-        
-        # After a card spotted no one will have it in their hand
-        suit = self.obtain_suit_index(card.suit)
-        self.beliefs[:, suit, card.order] = 0
-
-        if card.suit != round_suit:
-            print(f"Player {self.name} noticed that {player.name} no longer {round_suit}!!!")
-
-            round_suit_index = self.obtain_suit_index(round_suit)
-            # If the card is not of the round suit, the player no longer has any card of the round suit
-            self.beliefs[player.id - 1, round_suit_index, :] = 0
-
-            # Check how many players still have the possibility of having a card of the round suit
-            num_players = np.count_nonzero(self.beliefs[:, round_suit_index, :])
-            if num_players == 0: # Nothing to do
-                return
-
-            # For each player
-            for j in range(4):
-                # For each card
-                for i in range(10):
-                    if self.beliefs[j, round_suit_index, i] != 0:
-                        self.beliefs[j, round_suit_index, i] = 1 / num_players
 
 
 class CooperativePlayer(BeliefPlayer):
