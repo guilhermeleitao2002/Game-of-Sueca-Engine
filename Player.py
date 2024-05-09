@@ -198,30 +198,17 @@ class BeliefPlayer(Player):
 
     def __init__(self, id, name, team, others) -> None:
         super().__init__(id, name, team)
-        self.card_ordering_index = {
-            '2_of_hearts': 0, '2_of_diamonds': 1, '2_of_spades': 2, '2_of_clubs': 3,
-            '3_of_hearts': 4, '3_of_diamonds': 5, '3_of_spades': 6, '3_of_clubs': 7,
-            '4_of_hearts': 8, '4_of_diamonds': 9, '4_of_spades': 10, '4_of_clubs': 11,
-            '5_of_hearts': 12, '5_of_diamonds': 13, '5_of_spades': 14, '5_of_clubs': 15,
-            '6_of_hearts': 16, '6_of_diamonds': 17, '6_of_spades': 18, '6_of_clubs': 19,
-            'J_of_hearts': 20, 'J_of_diamonds': 21, 'J_of_spades': 22, 'J_of_clubs': 23,
-            'Q_of_hearts': 24, 'Q_of_diamonds': 25, 'Q_of_spades': 26, 'Q_of_clubs': 27,
-            'K_of_hearts': 28, 'K_of_diamonds': 29, 'K_of_spades': 30, 'K_of_clubs': 31,
-            '7_of_hearts': 32, '7_of_diamonds': 33, '7_of_spades': 34, '7_of_clubs': 35,
-            'A_of_hearts': 36, 'A_of_diamonds': 37, 'A_of_spades': 38, 'A_of_clubs': 39
-        }
-        self.beliefs = {others[0]: [1/3 for _ in range(40)], others[1]: [
-                                    1/3 for _ in range(40)], others[2]: [1/3 for _ in range(40)]}
 
-        # Store the belief at each timestep [suit, card, player]
-        # hearts - 0
-        # diamonds - 1
-        self.beliefs_2 = np.ones((4,10,4)) / 3
+        # Store the belief at each timestamp [player, suit, card]
+        self.beliefs = np.ones((4,4,10)) / 3
+        # Set the beliefs of the player itself to 0
+        self.beliefs[self.id - 1] = 0
 
     def obtain_suit_index(self, suit: str) -> int:
         '''
             Returns the index of a given suit
         '''
+
         match suit:
             case "hearts":
                 return 0
@@ -233,90 +220,49 @@ class BeliefPlayer(Player):
                 return 3
             case _ :
                 raise ValueError("Invalid Suit")
-
-    def update_beliefs(self, card, round_suit, player_name) -> None:
-        '''
-            The card was seen so we now know that no player no longer has it
-        '''
-
-        # Update the beliefs of the other players
-        print(f"Player {self.name} saw {card.name}")
-        for player in self.beliefs:
-            index = self.card_ordering_index[card.name]
-            self.beliefs[player][index] = 0
-
-        # If the card is not of the round suit, update the beliefs of the
-        # player that played the card
-        if card.suit != round_suit and self.name != player_name:
-            print(f"Player {self.name} noticed that {player_name} does not have any more {round_suit}!!!")
-
-            match round_suit:
-                case "hearts":
-                    j = 0
-                case "diamonds":
-                    j = 1
-                case "spades":
-                    j = 2
-                case "clubs":
-                    j = 3
-
-            # TODO: In this case, player is set to the last key of self
-            for i in range(10):
-                self.beliefs[player_name][i*4 + j] = 0
             
-                    
-            print(self.beliefs)
-
-    def update_beliefs_2(self, card: Card, round_suit: str, player: Player) -> None:
-        '''
-            Updates the new belief of the player, after a card has been spoted
-        '''
-
-        print(f"Player {self.name} saw {card.name}")
-        
-        # After a card spotted no one will have it in their hand
-        self.beliefs_2[self.obtain_suit_index(card.suit)][card.order] = 0
-
-        if card.suit != round_suit:
-            print(f"Player {self.name} noticed that {player.name} does not have any more {round_suit}!!!")
-
-            for i in range(10):
-                prob_dist = self.beliefs_2[self.obtain_suit_index(card.suit)][i]
-                prob_sum = np.sum(prob_dist) - 1
-                possible_players = np.count_nonzero(prob_dist)
-                self.beliefs_2[self.obtain_suit_index(card.suit)][i][player.id - 1] = 0
-                self.beliefs_2[self.obtain_suit_index(card.suit)][i][prob_dist > 0] = prob_sum / possible_players
-
-            print(self.beliefs_2)
-            
-
-    # For immediately after the cards are handed
     def update_beliefs_initial(self, card) -> None:
         '''
             Update the beliefs of the player after the initial handing of cards
         '''
 
-        for player in self.beliefs:
-            index = self.card_ordering_index[card]
-            self.beliefs[player][index] = 0
+        self.beliefs[:, self.obtain_suit_index(card.suit), card.order] = 0
+        self.beliefs[self.id - 1, self.obtain_suit_index(card.suit), card.order] = 1
 
-    def update_beliefs_initial_2(self, deck: list[Card]) -> None:
+    def update_beliefs(self, card: Card, round_suit: str, player: Player) -> None:
         '''
-            Updates the belief_2 matrix to take into consideration the initial Deck
+            Updates the new belief of the player, after a card has been spotted
         '''
-        print(self.hand)
-        for card in deck:
-            if card in self.hand:
-                #print(f"Player {self.name} has {card.name}")
-                self.beliefs_2[self.obtain_suit_index(card.suit)][card.order] = 0
-                self.beliefs_2[self.obtain_suit_index(card.suit)][card.order][self.id -1] = 1
-            else:
-                self.beliefs_2[self.obtain_suit_index(card.suit)][card.order][self.id -1] = 0
-        #print(self.beliefs_2)
+
+        print(f"Player {self.name} saw {card.name}")
+        
+        # After a card spotted no one will have it in their hand
+        suit = self.obtain_suit_index(card.suit)
+        self.beliefs[:, suit, card.order] = 0
+
+        if card.suit != round_suit:
+            print(f"Player {self.name} noticed that {player.name} no longer {round_suit}!!!")
+
+            round_suit_index = self.obtain_suit_index(round_suit)
+            # If the card is not of the round suit, the player no longer has any card of the round suit
+            self.beliefs[player.id - 1, round_suit_index, :] = 0
+
+            # Check how many players still have the possibility of having a card of the round suit
+            num_players = np.count_nonzero(self.beliefs[:, round_suit_index, :])
+            if num_players == 0: # Nothing to do
+                return
+
+            # For each player
+            for j in range(4):
+                # For each card
+                for i in range(10):
+                    if self.beliefs[j, round_suit_index, i] != 0:
+                        self.beliefs[j, round_suit_index, i] = 1 / num_players
+
 
 class CooperativePlayer(BeliefPlayer):
     '''
-        CoopeartivePlayer ->
+        CooperativePlayer ->
             - name: player name
             - team: team object to which the player belongs
             - play_round(i, cards_played, round_suit): play a round of the game
@@ -325,16 +271,21 @@ class CooperativePlayer(BeliefPlayer):
     def __init__(self,id,  name, team, others) -> None:
         super().__init__(id, name, team, others)
 
-    def update_beliefs(self, card, round_suit, player_name) -> None:
+    def update_beliefs_initial(self, card) -> None:
+        '''
+            Update the beliefs of the player after the initial handing of cards
+        '''
+
+        return super().update_beliefs_initial(card)
+
+    def update_beliefs(self, card, round_suit, player) -> None:
         '''
             The card was seen so we now know that no player no longer has it
         '''
-        super().update_beliefs(card, round_suit, player_name)
 
-    def update_beliefs_initial(self, card) -> None:
-        return super().update_beliefs_initial(card)
+        super().update_beliefs(card, round_suit, player)
 
-    def play_round(self, i, cards_played_in_round, round_suit, players_order) -> Card:
+    def play_round(self, i, cards_played_in_round, round_suit, players_order) -> tuple[Card, str]:
         '''
             Play a round of the game of Sueca, selecting the card, considering
             the cards that its partner has, acting as a "team player"
@@ -356,8 +307,6 @@ class CooperativePlayer(BeliefPlayer):
 
         print(self.name + " played " + cardPlayed.name)
 
-        self.beliefs_2[self.obtain_suit_index(cardPlayed.suit)][cardPlayed.order][self.id - 1] = 0
-
         return cardPlayed, round_suit
 
     def get_strategy(self) -> str:
@@ -372,21 +321,25 @@ class PredictorPlayer(BeliefPlayer):
     def __init__(self,id,  name, team, others) -> None:
         super().__init__(id, name, team, others)
 
-    # For during the game
-    def update_beliefs(self, card, round_suit, player_name) -> None:
-        super().update_beliefs(card, round_suit, player_name)
-
-    # For immediately after the cards are handed
     def update_beliefs_initial(self, card) -> None:
+        '''
+            Update the beliefs of the player after the initial handing of cards
+        '''
+
         return super().update_beliefs_initial(card)
 
-    def play_round(self, i, cards_played, round_suit, players_order) -> tuple[Card, str]:
+    def update_beliefs(self, card, round_suit, player) -> None:
         '''
-            Play a round of the game of Sueca, selecting a card at random in each round
+            Update the beliefs of the player after a card has been spotted
         '''
 
-        # Update beliefs
-        #self.update_beliefs(cards_played, round_suit, player_name)
+        super().update_beliefs(card, round_suit, player)
+
+    def play_round(self, i, cards_played_in_round, round_suit, players_order) -> tuple[Card, str]:
+        '''
+            Play a round of the game of Sueca, selecting the card, considering
+            the cards that its partner has, acting as a "team player"
+        '''
 
         if i == 0:  # if the player is the first to play, play a random card
             cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
@@ -400,7 +353,7 @@ class PredictorPlayer(BeliefPlayer):
             else:                               # if the player does not have cards of the same suit
                 cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
 
-        cards_played.append(cardPlayed)
+        cards_played_in_round.append(cardPlayed)
 
         print(self.name + " played " + cardPlayed.name)
 

@@ -104,7 +104,7 @@ class Game:
         # Create deck suits
         suits = ["hearts", "diamonds", "clubs", "spades"]
         # Create deck ranks
-        ranks = ["2", "3", "4", "5", "6", "7", "J", "Q", "K", "A"]
+        ranks = ["2", "3", "4", "5", "6", "7", "Q", "J", "K", "A"]
 
         deck = []
         for rank in ranks:
@@ -189,33 +189,42 @@ class Game:
         '''
 
         # For each player
-        deck_copy = copy.deepcopy(self.deck)
         for i, player in enumerate(self.playersOrder):
             # For each card
             for j in range(10):
                 # Pop a card at random
                 card = self.deck.pop(randint(0, len(self.deck) - 1))
                 player.add_card(card)
+
                 # Update beliefs of the player
                 if player.get_strategy() == 'Deck Predictor' or player.get_strategy() == 'Cooperative Player':
-                    player.update_beliefs_initial(card.name)
+                    player.update_beliefs_initial(card)
 
-                if i == len(self.playersOrder) - 1:  # Last player
+                if i == len(self.playersOrder) - 1: # Last player
                     if j == 9:                      # Last card
                         self.trump = card           # Is the trump
+
+        # For each player
+        for player in self.playersOrder:
+            print(player.name)
+            print(player.get_strategy())
+            # For each card
+            for card in player.hand:
+                print(card.name)
+            #  print initial belief
             if player.get_strategy() == 'Deck Predictor' or player.get_strategy() == 'Cooperative Player':
-                player.update_beliefs_initial_2(deck_copy)
+                print(player.beliefs)
+            print("\n")
+        print(f'Trump card: {self.trump.name}')
             
-    def update_beliefs(self, cardPlayed, round_suit, player_) -> None:
+    def update_beliefs(self, cardPlayed, round_suit, player) -> None:
         '''
             Update the beliefs of the players except the one that played the card (no need!)
         '''
-        player_name = player_.name
-        for player in self.playersOrder:
-            if player.name != player_name and (player.get_strategy() == 'Deck Predictor' or player.get_strategy() == 'Cooperative Player'):
-                player.update_beliefs(cardPlayed, round_suit, player_name)
-                player.update_beliefs_2(cardPlayed, round_suit, player_)
-        return
+
+        for p in self.playersOrder:
+            if p.get_strategy() == 'Deck Predictor' or p.get_strategy() == 'Cooperative Player':
+                p.update_beliefs(cardPlayed, round_suit, player)
 
     def play_round(self) -> dict[str, str]:
         '''
@@ -232,7 +241,7 @@ class Game:
         for i, player in enumerate(self.playersOrder):
             match player.get_strategy():
                 case 'Maximize Points Won' | 'Maximize Rounds Won':
-                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self)
+                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self) # fred wtf is this self seu sebas
                 case 'Deck Predictor' | 'Cooperative Player':
                     # Update beliefs of the players
                     card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder)
@@ -261,16 +270,6 @@ class Game:
         '''
             Play the game of Sueca
         '''
-
-        # For each player
-        for player in self.playersOrder:
-            print(player.name)
-            print(player.get_strategy())
-            # For each card
-            for card in player.hand:
-                print(card.name)
-            print("\n")
-        print(f'Trump card: {self.trump.name}')
 
         # For each of the 10 rounds
         for num_rounds in range(10):
