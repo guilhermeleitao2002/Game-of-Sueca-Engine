@@ -244,7 +244,7 @@ class Game:
                     card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self) # fred wtf is this self seu sebas
                 case 'Deck Predictor' | 'Cooperative Player':
                     # Update beliefs of the players
-                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder)
+                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self)
                 case _:
                     card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder)
             

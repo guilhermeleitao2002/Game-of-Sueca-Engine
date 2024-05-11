@@ -2,6 +2,7 @@ import numpy as np
 
 from random import randint
 from Card import Card
+import copy
 
 
 class Player:
@@ -345,23 +346,50 @@ class PredictorPlayer(BeliefPlayer):
 
         super().update_beliefs(card, round_suit, player)
 
-    def play_round(self, i, cards_played_in_round, round_suit, players_order) -> tuple[Card, str]:
+    def get_player_possible_cards(self, player, suit='all') -> list:
+        '''
+            Returns the cards of a given player
+        '''
+
+        if suit != 'all':
+            player_cards = player.get_cards_by_suit(suit)
+            if player_cards == []:
+                player_cards = copy.deepcopy(player.hand)
+        else:
+            player_cards = copy.deepcopy(player.hand)
+
+        return player_cards
+
+    def play_round(self, i, cards_played_in_round, round_suit, players_order, game) -> tuple[Card, str]:
         '''
             Play a round of the game of Sueca, selecting the card, considering
             the cards that its partner has, acting as a "team player"
         '''
 
+        # Build the vectors containing the cards of the players into a dictionary
+        cards_to_play = {}
         if i == 0:  # if the player is the first to play, play a random card
-            cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
-            round_suit = cardPlayed.suit
+            for player in players_order:
+                cards_to_play[player.id] = self.get_player_possible_cards(player)
         else:       # if the player is not the first to play, play a card of the same suit if possible
-            cardsOfTheSameSuit = self.get_cards_by_suit(round_suit)
-            if len(cardsOfTheSameSuit) != 0:    # if the player has cards of the same suit
-                cardPlayed = cardsOfTheSameSuit[randint(
-                    0, len(cardsOfTheSameSuit) - 1)]
-                self.hand.remove(cardPlayed)
-            else:                               # if the player does not have cards of the same suit
-                cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
+            for player in players_order:
+                cards_to_play[player.id] = self.get_player_possible_cards(player, round_suit)
+
+        # Build the utility per card for the player
+        utility_per_card = {}
+
+        for card in cards_to_play[self.id]:
+            # Calculate the utility of the card
+            utility = 0
+
+            for player in players_order:
+                if player.id == self.id:    # Skip
+                    continue
+
+                # Calculate the utility of the card
+                utility += game.calculate_card_utility(card, cards_played_in_round, player, round_suit)
+
+            utility_per_card[card] = utility                     
 
         cards_played_in_round.append(cardPlayed)
 
