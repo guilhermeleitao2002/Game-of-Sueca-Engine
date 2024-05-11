@@ -41,6 +41,13 @@ class Player:
                 filtered_hand.append(card)
 
         return filtered_hand
+    
+    def get_partner(self) -> 'Player':
+        '''
+            Get the partner of the player
+        '''
+
+        return self.team.get_partner(self)
 
 class BeliefPlayer(Player):
     '''
@@ -116,6 +123,7 @@ class BeliefPlayer(Player):
             for k in range(10):
                 if not np.sum(self.beliefs[:, j, k]) == 1 and not np.sum(self.beliefs[:, j, k]) == 0:
                     raise ValueError("Invalid Belief")
+
 
 class RandomPlayer (Player):
     '''

@@ -22,6 +22,15 @@ class Team:
 
         self.players.append(player)
 
+    def get_partner(self, player: Player) -> Player:
+        '''
+            Get the partner of a player
+        '''
+
+        for p in self.players:
+            if p.name != player.name:
+                return p
+
     def dump_to_json(self) -> dict[str, any]:
         '''
             Dump the team information to a dictionary
