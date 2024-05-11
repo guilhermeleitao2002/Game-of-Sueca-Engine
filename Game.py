@@ -212,8 +212,8 @@ class Game:
             for card in player.hand:
                 print(card.name)
             #  print initial belief
-            if player.get_strategy() == 'Deck Predictor' or player.get_strategy() == 'Cooperative Player':
-                print(player.beliefs)
+            # if player.get_strategy() == 'Deck Predictor' or player.get_strategy() == 'Cooperative Player':
+            #     print(player.beliefs)
             print("\n")
         print(f'Trump card: {self.trump.name}')
             
@@ -223,7 +223,7 @@ class Game:
         '''
 
         for p in self.playersOrder:
-            if p.get_strategy() == 'Deck Predictor' or p.get_strategy() == 'Cooperative Player':
+            if p.get_strategy() == 'Deck Predictor' or p.get_strategy() == 'Cooperative Player' and p.name != player.name:
                 p.update_beliefs(cardPlayed, round_suit, player)
 
     def play_round(self) -> dict[str, str]:
