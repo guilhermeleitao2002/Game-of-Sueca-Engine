@@ -1,11 +1,8 @@
-import copy
-
 from random import randint, shuffle, choice
 from Card import Card
 from Team import Team
 from Player import CooperativePlayer, RandomPlayer, MaximizePointsPlayer, MaximizeRoundsWonPlayer, PredictorPlayer, Player
 from termcolor import colored
-
 
 class Game:
     '''
@@ -18,7 +15,9 @@ class Game:
             - game_info: dictionary with game information
     '''
 
-    def __init__(self, team_1_strategy: str, team_2_strategy: str) -> None:
+    def __init__(self, team_1_strategy: str, team_2_strategy: str, v:bool) -> None:
+        self.verbose = v
+
         #self.strategy = strategy
         self.trump = None
 
@@ -35,39 +34,39 @@ class Game:
         # Create players based on strategy type
         match team_1_strategy:
             case 'random':
-                player1 = RandomPlayer(1, "Leitao", team1)
-                player2 = RandomPlayer(2, "Fred", team1)
+                player1 = RandomPlayer(1, "Leitao", team1, self.verbose)
+                player2 = RandomPlayer(2, "Fred", team1, self.verbose)
             case 'maxpointswon':
-                player1 = MaximizePointsPlayer(1, "Leitao", team1)
-                player2 = MaximizePointsPlayer(2, "Fred", team1)
+                player1 = MaximizePointsPlayer(1, "Leitao", team1, self.verbose)
+                player2 = MaximizePointsPlayer(2, "Fred", team1, self.verbose)
             case 'maxroundswon':
-                player1 = MaximizeRoundsWonPlayer(1, "Leitao", team1)
-                player2 = MaximizeRoundsWonPlayer(2, "Fred", team1)
+                player1 = MaximizeRoundsWonPlayer(1, "Leitao", team1, self.verbose)
+                player2 = MaximizeRoundsWonPlayer(2, "Fred", team1, self.verbose)
             case 'predictor':
-                player1 = PredictorPlayer(1, "Leitao", team1, ["Fred", "Pedro", "Sebas"])
-                player2 = PredictorPlayer(2, "Fred", team1, ["Leitao", "Pedro", "Sebas"])
+                player1 = PredictorPlayer(1, "Leitao", team1, self.verbose)
+                player2 = PredictorPlayer(2, "Fred", team1, self.verbose)
             case 'cooperative':
-                player1 = CooperativePlayer(1, "Leitao", team1, ["Fred", "Pedro", "Sebas"])
-                player2 = CooperativePlayer(2, "Fred", team1, ["Leitao", "Pedro", "Sebas"])
+                player1 = CooperativePlayer(1, "Leitao", team1, self.verbose)
+                player2 = CooperativePlayer(2, "Fred", team1, self.verbose)
             case _:  # default
                 raise ValueError("Invalid strategy")
 
         match team_2_strategy:
             case 'random':
-                player3 = RandomPlayer(3, "Pedro", team2)
-                player4 = RandomPlayer(4, "Sebas", team2)
+                player3 = RandomPlayer(3, "Pedro", team2, self.verbose)
+                player4 = RandomPlayer(4, "Sebas", team2, self.verbose)
             case 'maxpointswon':
-                player3 = MaximizePointsPlayer(3, "Pedro", team2)
-                player4 = MaximizePointsPlayer(4, "Sebas", team2)
+                player3 = MaximizePointsPlayer(3, "Pedro", team2, self.verbose)
+                player4 = MaximizePointsPlayer(4, "Sebas", team2, self.verbose)
             case 'maxroundswon':
-                player3 = MaximizeRoundsWonPlayer(3, "Pedro", team2)
-                player4 = MaximizeRoundsWonPlayer(4, "Sebas", team2)
+                player3 = MaximizeRoundsWonPlayer(3, "Pedro", team2, self.verbose)
+                player4 = MaximizeRoundsWonPlayer(4, "Sebas", team2, self.verbose)
             case 'cooperative':
-                player3 = CooperativePlayer(3, "Pedro", team2, ["Sebas", "Leitao", "Fred"])
-                player4 = CooperativePlayer(4, "Sebas", team2, ["Pedro", "Leitao", "Fred"])
+                player3 = CooperativePlayer(3, "Pedro", team2, self.verbose)
+                player4 = CooperativePlayer(4, "Sebas", team2, self.verbose)
             case 'predictor':
-                player3 = PredictorPlayer(3, "Pedro", team2, ["Sebas", "Leitao", "Fred"])
-                player4 = PredictorPlayer(4, "Sebas", team2, ["Pedro", "Leitao", "Fred"])
+                player3 = PredictorPlayer(3, "Pedro", team2, self.verbose)
+                player4 = PredictorPlayer(4, "Sebas", team2, self.verbose)
             case _:  # default
                 raise ValueError("Invalid strategy")
 
@@ -207,14 +206,15 @@ class Game:
 
         # Print game details
         # For each player
-        for player in self.playersOrder:
-            print(colored(f'{player.name} -> {player.team.name}', 'yellow', attrs=['underline']))
-            print(colored(player.get_strategy(), attrs=['bold']))
-            # For each card
-            for card in player.hand:
-                print(card.name)
-            print("\n")
-        print(colored(f'Trump card: {self.trump.name}\n\n', 'blue', attrs=['bold']))
+        if self.verbose:
+            for player in self.playersOrder:
+                print(colored(f'{player.name} -> {player.team.name}', 'yellow', attrs=['underline']))
+                print(colored(player.get_strategy(), attrs=['bold']))
+                # For each card
+                for card in player.hand:
+                    print(card.name)
+                print("\n")
+            print(colored(f'Trump card: {self.trump.name}\n\n', 'blue', attrs=['bold']))
             
     def update_beliefs(self, cardPlayed, round_suit, player) -> None:
         '''
@@ -256,7 +256,8 @@ class Game:
         playerWinnerOfRound = self.playersOrder[winnerId[1]]
         playerWinnerOfRound.team.score += roundPoints
 
-        print(colored(playerWinnerOfRound.name + " wins the round", 'blue', attrs=['bold']))
+        if self.verbose:
+            print(colored(playerWinnerOfRound.name + " wins the round", 'blue', attrs=['bold']))
 
         # Rotate the players order to the winner of the round
         self.playersOrder = self.rotate_order_to_winner(self.playersOrder, playerWinnerOfRound)
@@ -270,24 +271,30 @@ class Game:
 
         # For each of the 10 rounds
         for num_rounds in range(10):
-            print(colored("\nRound " + str(num_rounds + 1) + ":", 'green', attrs=['underline']))
+            if self.verbose:
+                print(colored("\nRound " + str(num_rounds + 1) + ":", 'green', attrs=['underline']))
+
             round_info = self.play_round()
             (self.game_info["Rounds"])[num_rounds + 1] = round_info
 
         # Print the final game details
-        print(colored("\nSporting score: " + str(self.teams[0].score), 'green'))
-        print(colored("Benfica score: " + str(self.teams[1].score), 'red'))
+        if self.verbose:
+            print(colored("\nSporting score: " + str(self.teams[0].score), 'green'))
+            print(colored("Benfica score: " + str(self.teams[1].score), 'red'))
         self.game_info["Teams"] = [self.teams[0].dump_to_json(), self.teams[1].dump_to_json()]
         if self.teams[0].score > self.teams[1].score:
-            print()
-            print(colored("Sporting wins", 'white', 'on_green'))
+            if self.verbose:
+                print()
+                print(colored("Sporting wins", 'white', 'on_green'))
             return self.teams[0].name
         elif self.teams[0].score == self.teams[1].score:
-            print()
-            print(colored("It's a tie!", 'white', 'on_dark_grey'))
+            if self.verbose:
+                print()
+                print(colored("It's a tie!", 'white', 'on_dark_grey'))
             return "ties"
         else:
-            print()
-            print(colored("Benfica wins!", 'white', 'on_red'))
+            if self.verbose:
+                print()
+                print(colored("Benfica wins!", 'white', 'on_red'))
             return self.teams[1].name
     

@@ -6,7 +6,6 @@ import copy
 from itertools import product
 from termcolor import colored
 
-
 class Player:
     '''
         Player ->
@@ -18,7 +17,8 @@ class Player:
             - get_cards_by_suit(suit): get all cards of a given suit
     '''
 
-    def __init__(self, id, name, team) -> None:
+    def __init__(self, id, name, team, v) -> None:
+        self.verbose = v
         self.id = id
         self.name = name
         self.hand = []
@@ -60,8 +60,8 @@ class BeliefPlayer(Player):
             - play_round(i, cards_played, round_suit): play a round of the game
     '''
 
-    def __init__(self, id, name, team, others) -> None:
-        super().__init__(id, name, team)
+    def __init__(self, id, name, team, v) -> None:
+        super().__init__(id, name, team, v)
 
         # Store the belief at each timestamp [player, suit, card]
         self.beliefs = np.ones((4,4,10)) / 3
@@ -98,7 +98,8 @@ class BeliefPlayer(Player):
             Updates the new belief of the player, after a card has been spotted
         '''
 
-        print(f"Player {self.name} saw {card.name}")
+        if self.verbose:
+            print(f"Player {self.name} saw {card.name}")
         
         # After a card spotted no one will have it in their hand
         suit = self.obtain_suit_index(card.suit)
@@ -136,8 +137,8 @@ class RandomPlayer (Player):
             - play_round(i, cards_played, round_suit): play a round of the game
     '''
 
-    def __init__(self, id, name, team) -> None:
-        super().__init__(id, name, team)
+    def __init__(self, id, name, team, v) -> None:
+        super().__init__(id, name, team, v)
 
     def play_round(self, i, cards_played, round_suit) -> Card:
         '''
@@ -158,7 +159,9 @@ class RandomPlayer (Player):
 
         cards_played.append(cardPlayed)
 
-        print(colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
+        if self.verbose:
+            print(colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
+
         return cardPlayed, round_suit
 
     def get_strategy(self) -> str:
@@ -171,8 +174,8 @@ class RandomPlayer (Player):
 
 class MaximizePointsPlayer(Player):
 
-    def __init__(self, id, name, team) -> None:
-        super().__init__(id, name, team)
+    def __init__(self, id, name, team, v) -> None:
+        super().__init__(id, name, team, v)
 
     def play_round(self, i, cards_played, round_suit, players_order, game) -> Card:
         if i == 0:
@@ -208,7 +211,9 @@ class MaximizePointsPlayer(Player):
                         cardPlayed = self.hand[0]  # play weakest card
                         self.hand.remove(cardPlayed)
 
-        print(cardPlayed.name)
+        if self.verbose:
+            print(cardPlayed.name)
+
         cards_played.append(cardPlayed)
         return cardPlayed, round_suit
 
@@ -221,8 +226,8 @@ class MaximizePointsPlayer(Player):
 
 class MaximizeRoundsWonPlayer(Player):
 
-    def __init__(self, id, name, team) -> None:
-        super().__init__(id, name, team)
+    def __init__(self, id, name, team, v) -> None:
+        super().__init__(id, name, team, v)
 
     def play_round(self, i, cards_played, round_suit, players_order, game):
         if i == 0:
@@ -262,7 +267,9 @@ class MaximizeRoundsWonPlayer(Player):
                         cardPlayed = self.hand[0]  # play weakest card
                         self.hand.remove(cardPlayed)
 
-        print(cardPlayed.name)
+        if self.verbose:
+            print(cardPlayed.name)
+
         cards_played.append(cardPlayed)
         return cardPlayed, round_suit
 
@@ -281,8 +288,8 @@ class CooperativePlayer(BeliefPlayer):
             - play_round(i, cards_played, round_suit): play a round of the game
     '''
 
-    def __init__(self,id,  name, team, others) -> None:
-        super().__init__(id, name, team, others)
+    def __init__(self,id,  name, team, v) -> None:
+        super().__init__(id, name, team, v)
 
     def update_beliefs_initial(self, card) -> None:
         '''
@@ -331,8 +338,8 @@ class CooperativePlayer(BeliefPlayer):
 
 class PredictorPlayer(BeliefPlayer):
 
-    def __init__(self,id,  name, team, others) -> None:
-        super().__init__(id, name, team, others)
+    def __init__(self,id,  name, team, v) -> None:
+        super().__init__(id, name, team, v)
 
     def update_beliefs_initial(self, card) -> None:
         '''
@@ -407,7 +414,8 @@ class PredictorPlayer(BeliefPlayer):
             utility_per_card[card] = expected_utility
 
         # Print the card.name and its utility
-        print(f"Player {self.name} has the following utilities: {[(card.name, utility_per_card[card]) for card in utility_per_card.keys()]}")
+        if self.verbose:
+            print(f"Player {self.name} has the following utilities: {[(card.name, utility_per_card[card]) for card in utility_per_card.keys()]}")
 
         # Get the card with the highest utility
         # If there is a draw, the first card with the lowest card.order is chosen
@@ -415,7 +423,9 @@ class PredictorPlayer(BeliefPlayer):
         cards_played_in_round.append(best_card)
         round_suit = best_card.suit
         self.hand.remove(best_card)
-        print(colored(f"{self.name} played {best_card.name}", 'green', attrs=['bold']))
+
+        if self.verbose:
+            print(colored(f"{self.name} played {best_card.name}", 'green', attrs=['bold']))
 
         return best_card, round_suit
 
@@ -425,8 +435,3 @@ class PredictorPlayer(BeliefPlayer):
             In this case, the strategy is just random
         '''
         return 'Deck Predictor'
-
-
-### TODO: Implement more strategies
-### TODO: Implement more strategies
-### TODO: Implement more strategies

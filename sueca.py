@@ -5,6 +5,9 @@ from Game import Game
 import argparse
 from termcolor import colored
 
+
+########################################## Helper Functions ##########################################
+
 def parse_arguments():
     parser = argparse.ArgumentParser(description='Sueca game simulator')
 
@@ -12,14 +15,16 @@ def parse_arguments():
     parser.add_argument('--t1', '-team_1', type=str, required=True, help='Strategy for team 1')
     parser.add_argument('--t2', '-team_2', type=str, required=True, help='Strategy for team 2')
     parser.add_argument('--n', '-num_games', type=int, default=1, help='Number of games to simulate')
+    parser.add_argument('--v', '-verbose', action='store_true', default=False, help='Print the game log')
 
     return parser.parse_args()
+
 
 ########################################## Main Program #############################################
 
 if __name__ == "__main__":
     args = parse_arguments()
-    print(args)
+    verbose = args.v
 
     # Clean the output file
     with open(args.o, 'w') as f:
@@ -28,10 +33,11 @@ if __name__ == "__main__":
     wins = {'Benfica': 0, 'Sporting': 0, 'ties': 0}
 
     for i in range(args.n):
-        print(colored(f'\nGAME {i+1}', 'green', attrs=['bold', 'underline']))
+        if verbose:
+            print(colored(f'\nGAME {i+1}', 'green', attrs=['bold', 'underline']))
 
         # Initialize the game
-        game = Game(args.t1, args.t2)
+        game = Game(args.t1, args.t2, verbose)
 
         # Distribute the cards
         game.hand_cards()
