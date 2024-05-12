@@ -24,7 +24,7 @@ if __name__ == "__main__":
     wins = {'Benfica': 0, 'Sporting': 0, 'ties': 0}
 
     for i in range(args.n):
-        print(f'\nGame {i+1}')
+        print(colored(f'\nGAME {i+1}', 'green', attrs=['bold', 'underline']))
 
         # Initialize the game
         game = Game(args.t1, args.t2)
