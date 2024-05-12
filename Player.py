@@ -426,11 +426,11 @@ class PredictorPlayer(BeliefPlayer):
         ############################################################
         #NOTE: In here, put individual strategies that you remember#
         ############################################################
-        if i == 0:    # In the first 5 rounds, if you are the first to play
-            # Avoid using the trump card by decreasing its utility
-            for card in utilities:
-                if self.get_card(card[0]).suit == game.trump.suit:
-                    utilities[utilities.index(card)] = (card[0], card[1] - 1000)    # NOT REALLY DOING ANYTHING BUT IT SHOULD RIGHT?
+        # if i == 0:    # In the first 5 rounds, if you are the first to play
+        #     # Avoid using the trump card by decreasing its utility
+        #     for card in utilities:
+        #         if self.get_card(card[0]).suit == game.trump.suit:
+        #             utilities[utilities.index(card)] = (card[0], card[1] - 1000)    # NOT REALLY DOING ANYTHING BUT IT SHOULD RIGHT?
         ############################################################
         #NOTE: In here, put individual strategies that you remember#
         ############################################################
