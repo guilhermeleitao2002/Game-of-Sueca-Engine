@@ -260,7 +260,7 @@ class MaximizeRoundsWonPlayer(Player):
                 cardPlayed = None  # if different team
                 if cardsOfTheSameSuit:  # if have cards from suit
                     for card in cardsOfTheSameSuit:
-                        # Search for the lowest card taht can win
+                        # Search for the lowest card that can win
                         if card.order > winner[0].order:
                             cardPlayed = card
                             self.hand.remove(card)
