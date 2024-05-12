@@ -279,8 +279,8 @@ class Game:
         print(colored("Benfica score: " + str(self.teams[1].score), 'red'))
         self.game_info["Teams"] = [self.teams[0].dump_to_json(), self.teams[1].dump_to_json()]
         if self.teams[0].score > self.teams[1].score:
-            print(colored("Sporting wins", 'white', 'on_green'))
+            print(colored("\nSporting wins", 'white', 'on_green'))
         elif self.teams[0].score == self.teams[1].score:
-            print(colored("It's a tie!", 'white', 'on_dark_grey'))
+            print(colored("\nIt's a tie!", 'white', 'on_dark_grey'))
         else:
             print(colored("\nBenfica wins!", 'white', 'on_red'))
