@@ -3,6 +3,7 @@ from Card import Card
 from Team import Team
 from Player import CooperativePlayer, RandomPlayer, MaximizePointsPlayer, MaximizeRoundsWonPlayer, PredictorPlayer, Player
 from termcolor import colored
+from time import sleep
 
 class Game:
     '''
@@ -207,7 +208,7 @@ class Game:
 
         # Print game details
         # For each player
-        if self.verbose:
+        if self.verbose and self.mode == 'auto':
             for player in self.playersOrder:
                 print(colored(f'{player.name} -> {player.team.name}', 'yellow', attrs=['underline']))
                 print(colored(player.get_strategy(), attrs=['bold']))
@@ -215,7 +216,8 @@ class Game:
                 for card in player.hand:
                     print(card.name)
                 print("\n")
-        print(colored(f'Trump card: {self.trump.name}\n\n', 'blue', attrs=['bold']))
+        if self.verbose or self.mode == 'human':
+            print(colored(f'Trump card: {self.trump.name}\n\n', 'blue', attrs=['bold']))
             
     def update_beliefs(self, cardPlayed, round_suit, player) -> None:
         '''
@@ -226,7 +228,7 @@ class Game:
             if p.name != player.name and (p.get_strategy() == 'Deck Predictor' or p.get_strategy() == 'Cooperative Player'):
                 p.update_beliefs(cardPlayed, round_suit, player)
 
-    def play_round(self) -> dict[str, str]:
+    def play_round(self, num_round) -> dict[str, str]:
         '''
             Play a round of the game
         '''
@@ -241,7 +243,7 @@ class Game:
                 case 'Maximize Points Won' | 'Maximize Rounds Won':
                     card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self, self.mode)
                 case 'Deck Predictor' | 'Cooperative Player':
-                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self, self.mode)
+                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self, self.mode, num_round)
                 case _:
                     card_played, roundSuit = player.play_round(i, roundSuit, self.mode)
             
@@ -281,6 +283,10 @@ class Game:
             # Update the beliefs of the players
             self.update_beliefs(card_played, roundSuit, player)
 
+            # If the round is in human mode, wait for 5 seconds
+            if self.mode == 'human':
+                sleep(5)
+
         # Get the total points played in the round and the respective winner
         roundPoints, winnerId = self.calculate_round_points(cardsPlayedInround)
 
@@ -291,7 +297,7 @@ class Game:
         playerWinnerOfRound.team.score += roundPoints
 
         if self.verbose or self.mode == 'human':
-            print(colored(playerWinnerOfRound.name + " wins the round", 'blue', attrs=['bold']))
+            print(colored('You win the round' if playerWinnerOfRound.name == 'Leitao' else playerWinnerOfRound.name + " wins the round", 'blue', attrs=['bold']))
 
         # Rotate the players order to the winner of the round
         self.playersOrder = self.rotate_order_to_winner(self.playersOrder, playerWinnerOfRound)
@@ -308,7 +314,7 @@ class Game:
             if self.verbose or self.mode == 'human':
                 print(colored("\nRound " + str(num_rounds + 1) + ":", 'green', attrs=['underline']))
 
-            round_info = self.play_round()
+            round_info = self.play_round(num_rounds)
             (self.game_info["Rounds"])[num_rounds + 1] = round_info
 
         # Print the final game details
@@ -331,4 +337,3 @@ class Game:
                 print()
                 print(colored("Benfica wins!", 'white', 'on_red'))
             return self.teams[1].name
-    

@@ -314,7 +314,7 @@ class CooperativePlayer(BeliefPlayer):
 
         super().update_beliefs(card, round_suit, player)
 
-    def play_round(self, i, cards_played_in_round, round_suit, players_order, mode) -> tuple[Card, str]:
+    def play_round(self, i, cards_played_in_round, round_suit, players_order, mode, num_round) -> tuple[Card, str]:
         '''
             Play a round of the game of Sueca, selecting the card, considering
             the cards that its partner has, acting as a "team player"
@@ -382,7 +382,7 @@ class PredictorPlayer(BeliefPlayer):
 
         return player_cards, cards_prob
 
-    def play_round(self, i, cards_played_in_round, round_suit, players_order, game, mode) -> tuple[Card, str]:
+    def play_round(self, i, cards_played_in_round, round_suit, players_order, game, mode, num_round) -> tuple[Card, str]:
         '''
             Play a round of Sueca, selecting the card considering the cards that its partner has,
             acting as a "team player", and using utility based on projected round points and
@@ -421,13 +421,30 @@ class PredictorPlayer(BeliefPlayer):
 
             utility_per_card[card] = expected_utility
 
+        utilities = [(card.name, utility_per_card[card]) for card in utility_per_card.keys()]
+
+        ############################################################
+        #NOTE: In here, put individual strategies that you remember#
+        ############################################################
+        if i == 0:    # In the first 5 rounds, if you are the first to play
+            # Avoid using the trump card by decreasing its utility
+            for card in utilities:
+                if self.get_card(card[0]).suit == game.trump.suit:
+                    utilities[utilities.index(card)] = (card[0], card[1] - 1000)    # NOT REALLY DOING ANYTHING BUT IT SHOULD RIGHT?
+        ############################################################
+        #NOTE: In here, put individual strategies that you remember#
+        ############################################################
+
+        # Sort the cards by utility
+        utilities = sorted(utilities, key=lambda x: x[1], reverse=True)
+
         # Print the card.name and its utility
         if self.verbose and mode == 'auto':
-            print(f"Player {self.name} has the following utilities: {[(card.name, utility_per_card[card]) for card in utility_per_card.keys()]}")
+            print(f"Player {self.name} has the following utilities: {utilities}")
 
         # Get the card with the highest utility
         # If there is a draw, the first card with the lowest card.order is chosen
-        best_card = max(utility_per_card, key=utility_per_card.get)
+        best_card = self.get_card(utilities[0][0])
         if i == 0:
             round_suit = best_card.suit
         self.hand.remove(best_card)
