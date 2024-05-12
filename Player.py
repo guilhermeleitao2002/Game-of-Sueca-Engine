@@ -1,10 +1,11 @@
 import numpy as np
-
 from random import randint
 from Card import Card
 import copy
 from itertools import product
 from termcolor import colored
+
+############################################# Player Super Classes #############################################
 
 class Player:
     '''
@@ -51,6 +52,16 @@ class Player:
         '''
 
         return self.team.get_partner(self)
+
+    def get_card(self, card_name) -> Card:
+        '''
+            Get the card object from the player's hand
+        '''
+
+        for card in self.hand:
+            if card.name == card_name:
+                return card
+
 
 class BeliefPlayer(Player):
     '''
@@ -129,6 +140,8 @@ class BeliefPlayer(Player):
                     raise ValueError("Invalid Belief")
 
 
+############################################# Player Sub Classes #############################################
+
 class RandomPlayer (Player):
     '''
         RandomPlayer ->
@@ -140,7 +153,7 @@ class RandomPlayer (Player):
     def __init__(self, id, name, team, v) -> None:
         super().__init__(id, name, team, v)
 
-    def play_round(self, i, cards_played, round_suit) -> Card:
+    def play_round(self, i, round_suit, mode) -> Card:
         '''
             Play a round of the game of Sueca, selecting a card at random in each -round
         '''
@@ -157,9 +170,7 @@ class RandomPlayer (Player):
             else:                               # if the player does not have cards of the same suit
                 cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
 
-        cards_played.append(cardPlayed)
-
-        if self.verbose:
+        if self.verbose or mode == 'human':
             print(colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
 
         return cardPlayed, round_suit
@@ -177,7 +188,7 @@ class MaximizePointsPlayer(Player):
     def __init__(self, id, name, team, v) -> None:
         super().__init__(id, name, team, v)
 
-    def play_round(self, i, cards_played, round_suit, players_order, game) -> Card:
+    def play_round(self, i, cards_played, round_suit, players_order, game, mode) -> Card:
         if i == 0:
             cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
             round_suit = cardPlayed.suit
@@ -214,7 +225,6 @@ class MaximizePointsPlayer(Player):
         if self.verbose:
             print(cardPlayed.name)
 
-        cards_played.append(cardPlayed)
         return cardPlayed, round_suit
 
     def get_strategy(self) -> str:
@@ -229,7 +239,7 @@ class MaximizeRoundsWonPlayer(Player):
     def __init__(self, id, name, team, v) -> None:
         super().__init__(id, name, team, v)
 
-    def play_round(self, i, cards_played, round_suit, players_order, game):
+    def play_round(self, i, cards_played, round_suit, players_order, game, mode):
         if i == 0:
             cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
             round_suit = cardPlayed.suit
@@ -270,7 +280,6 @@ class MaximizeRoundsWonPlayer(Player):
         if self.verbose:
             print(cardPlayed.name)
 
-        cards_played.append(cardPlayed)
         return cardPlayed, round_suit
 
     def get_strategy(self) -> str:
@@ -305,7 +314,7 @@ class CooperativePlayer(BeliefPlayer):
 
         super().update_beliefs(card, round_suit, player)
 
-    def play_round(self, i, cards_played_in_round, round_suit, players_order) -> tuple[Card, str]:
+    def play_round(self, i, cards_played_in_round, round_suit, players_order, mode) -> tuple[Card, str]:
         '''
             Play a round of the game of Sueca, selecting the card, considering
             the cards that its partner has, acting as a "team player"
@@ -323,9 +332,8 @@ class CooperativePlayer(BeliefPlayer):
             else:                               # if the player does not have cards of the same suit
                 cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
 
-        cards_played_in_round.append(cardPlayed)
-
-        colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold'])
+        if self.verbose or mode == 'human':
+            print(colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
 
         return cardPlayed, round_suit
 
@@ -374,7 +382,7 @@ class PredictorPlayer(BeliefPlayer):
 
         return player_cards, cards_prob
 
-    def play_round(self, i, cards_played_in_round, round_suit, players_order, game) -> tuple[Card, str]:
+    def play_round(self, i, cards_played_in_round, round_suit, players_order, game, mode) -> tuple[Card, str]:
         '''
             Play a round of Sueca, selecting the card considering the cards that its partner has,
             acting as a "team player", and using utility based on projected round points and
@@ -420,11 +428,11 @@ class PredictorPlayer(BeliefPlayer):
         # Get the card with the highest utility
         # If there is a draw, the first card with the lowest card.order is chosen
         best_card = max(utility_per_card, key=utility_per_card.get)
-        cards_played_in_round.append(best_card)
-        round_suit = best_card.suit
+        if i == 0:
+            round_suit = best_card.suit
         self.hand.remove(best_card)
 
-        if self.verbose:
+        if self.verbose or (mode == 'human' and self.name != 'Leitao'):
             print(colored(f"{self.name} played {best_card.name}", 'green', attrs=['bold']))
 
         return best_card, round_suit

@@ -15,8 +15,9 @@ class Game:
             - game_info: dictionary with game information
     '''
 
-    def __init__(self, team_1_strategy: str, team_2_strategy: str, v:bool) -> None:
+    def __init__(self, team_1_strategy: str, team_2_strategy: str, v:bool, mode:str) -> None:
         self.verbose = v
+        self.mode = mode
 
         #self.strategy = strategy
         self.trump = None
@@ -238,13 +239,41 @@ class Game:
         for i, player in enumerate(self.playersOrder):
             match player.get_strategy():
                 case 'Maximize Points Won' | 'Maximize Rounds Won':
-                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self)
+                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self, self.mode)
                 case 'Deck Predictor' | 'Cooperative Player':
-                    # Update beliefs of the players
-                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self)
+                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self, self.mode)
                 case _:
-                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit)
+                    card_played, roundSuit = player.play_round(i, roundSuit, self.mode)
             
+            # In human mode, print the cards played by the player and let him chose
+            if player.name == 'Leitao' and self.mode == 'human':
+                # Put the card played back in the hand
+                player.add_card(card_played)
+
+                print(colored(f'Your current hand:', 'yellow'))
+                for card in player.hand:
+                    print(colored(card.name, attrs=['bold']))
+                print('\nThe engine suggests you play', end=' ')
+                print(colored(card_played.name, 'blue', attrs=['bold']))
+                # Wait for user input
+                while True:
+                    card_name = input(colored('> ', attrs=['bold']))
+                    card_played = player.get_card(card_name)
+                    if card_played:
+                        break
+                    print(colored('Invalid card! Try again', 'red'))
+
+                if i == 0:
+                    roundSuit = card_played.suit
+
+                # Remove the card played from the hand
+                player.hand.remove(card_played)
+                print(colored(f'You played {card_played.name}', 'green', attrs=['bold']))
+
+            # Add the card played to the list of cards played in the round
+            cardsPlayedInround.append(card_played)
+
+            # Update the beliefs of the players
             self.update_beliefs(card_played, roundSuit, player)
 
         # Get the total points played in the round and the respective winner
@@ -256,7 +285,7 @@ class Game:
         playerWinnerOfRound = self.playersOrder[winnerId[1]]
         playerWinnerOfRound.team.score += roundPoints
 
-        if self.verbose:
+        if self.verbose or self.mode == 'human':
             print(colored(playerWinnerOfRound.name + " wins the round", 'blue', attrs=['bold']))
 
         # Rotate the players order to the winner of the round
@@ -271,29 +300,29 @@ class Game:
 
         # For each of the 10 rounds
         for num_rounds in range(10):
-            if self.verbose:
+            if self.verbose or self.mode == 'human':
                 print(colored("\nRound " + str(num_rounds + 1) + ":", 'green', attrs=['underline']))
 
             round_info = self.play_round()
             (self.game_info["Rounds"])[num_rounds + 1] = round_info
 
         # Print the final game details
-        if self.verbose:
+        if self.verbose or self.mode == 'human':
             print(colored("\nSporting score: " + str(self.teams[0].score), 'green'))
             print(colored("Benfica score: " + str(self.teams[1].score), 'red'))
         self.game_info["Teams"] = [self.teams[0].dump_to_json(), self.teams[1].dump_to_json()]
         if self.teams[0].score > self.teams[1].score:
-            if self.verbose:
+            if self.verbose or self.mode == 'human':
                 print()
                 print(colored("Sporting wins", 'white', 'on_green'))
             return self.teams[0].name
         elif self.teams[0].score == self.teams[1].score:
-            if self.verbose:
+            if self.verbose or self.mode == 'human':
                 print()
                 print(colored("It's a tie!", 'white', 'on_dark_grey'))
             return "ties"
         else:
-            if self.verbose:
+            if self.verbose or self.mode == 'human':
                 print()
                 print(colored("Benfica wins!", 'white', 'on_red'))
             return self.teams[1].name
