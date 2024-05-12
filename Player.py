@@ -3,6 +3,8 @@ import numpy as np
 from random import randint
 from Card import Card
 import copy
+from itertools import product
+from termcolor import colored
 
 
 class Player:
@@ -137,7 +139,7 @@ class RandomPlayer (Player):
     def __init__(self, id, name, team) -> None:
         super().__init__(id, name, team)
 
-    def play_round(self, i, cards_played, round_suit, players_order) -> Card:
+    def play_round(self, i, cards_played, round_suit) -> Card:
         '''
             Play a round of the game of Sueca, selecting a card at random in each -round
         '''
@@ -156,7 +158,7 @@ class RandomPlayer (Player):
 
         cards_played.append(cardPlayed)
 
-        print(self.name + " played " + cardPlayed.name)
+        print(colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
         return cardPlayed, round_suit
 
     def get_strategy(self) -> str:
@@ -316,7 +318,7 @@ class CooperativePlayer(BeliefPlayer):
 
         cards_played_in_round.append(cardPlayed)
 
-        print(self.name + " played " + cardPlayed.name)
+        colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold'])
 
         return cardPlayed, round_suit
 
@@ -358,44 +360,64 @@ class PredictorPlayer(BeliefPlayer):
         else:
             player_cards = copy.deepcopy(player.hand)
 
-        return player_cards
+        # Get the probability of each card in beliefs
+        cards_prob = []
+        for card in player_cards:
+            cards_prob.append(self.beliefs[player.id - 1, self.obtain_suit_index(card.suit), card.order])
+
+        return player_cards, cards_prob
 
     def play_round(self, i, cards_played_in_round, round_suit, players_order, game) -> tuple[Card, str]:
         '''
-            Play a round of the game of Sueca, selecting the card, considering
-            the cards that its partner has, acting as a "team player"
+            Play a round of Sueca, selecting the card considering the cards that its partner has,
+            acting as a "team player", and using utility based on projected round points and
+            probabilities of card holdings.
         '''
-
-        # Build the vectors containing the cards of the players into a dictionary
         cards_to_play = {}
-        if i == 0:  # if the player is the first to play, play a random card
-            for player in players_order:
-                cards_to_play[player.id] = self.get_player_possible_cards(player)
-        else:       # if the player is not the first to play, play a card of the same suit if possible
-            for player in players_order:
-                cards_to_play[player.id] = self.get_player_possible_cards(player, round_suit)
+        cards_probability = {}
+        for player in players_order:
+            if i == 0 or not player.get_cards_by_suit(round_suit):
+                cards_to_play[player.id], cards_probability[player.id] = self.get_player_possible_cards(player)
+            else:
+                cards_to_play[player.id], cards_probability[player.id] = self.get_player_possible_cards(player, round_suit)
 
-        # Build the utility per card for the player
         utility_per_card = {}
 
         for card in cards_to_play[self.id]:
-            # Calculate the utility of the card
-            utility = 0
+            expected_utility = 0
+            other_players_ids = [player.id for player in players_order if players_order.index(player) > i]
+            possible_plays_combinations = [cards_to_play[pid] for pid in other_players_ids]
+            probabilities_combinations = [cards_probability[pid] for pid in other_players_ids]
 
-            for player in players_order:
-                if player.id == self.id:    # Skip
-                    continue
+            # Create cartesian product of all combinations with their probabilities
+            for other_cards_tuple in product(*possible_plays_combinations):
+                combination_probability = np.prod([
+                    probabilities_combinations[j][possible_plays_combinations[j].index(card)]
+                    for j, card in enumerate(other_cards_tuple)
+                ])
 
-                # Calculate the utility of the card
-                utility += game.calculate_card_utility(card, cards_played_in_round, player, round_suit)
+                # Simulate this card being played along with the combination
+                simulated_cards_played = cards_played_in_round + [card] + list(other_cards_tuple)
+                round_points, winning_card = game.calculate_round_points(simulated_cards_played)
+                if players_order[winning_card[1]].team.name == self.team.name:
+                    expected_utility += round_points * combination_probability
+                else:
+                    expected_utility -= round_points * combination_probability
 
-            utility_per_card[card] = utility                     
+            utility_per_card[card] = expected_utility
 
-        cards_played_in_round.append(cardPlayed)
+        # Print the card.name and its utility
+        print(f"Player {self.name} has the following utilities: {[(card.name, utility_per_card[card]) for card in utility_per_card.keys()]}")
 
-        print(self.name + " played " + cardPlayed.name)
+        # Get the card with the highest utility
+        # If there is a draw, the first card with the lowest card.order is chosen
+        best_card = max(utility_per_card, key=utility_per_card.get)
+        cards_played_in_round.append(best_card)
+        round_suit = best_card.suit
+        self.hand.remove(best_card)
+        print(colored(f"{self.name} played {best_card.name}", 'green', attrs=['bold']))
 
-        return cardPlayed, round_suit
+        return best_card, round_suit
 
     def get_strategy(self) -> str:
         '''

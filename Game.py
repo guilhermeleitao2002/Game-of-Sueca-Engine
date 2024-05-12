@@ -4,6 +4,7 @@ from random import randint, shuffle, choice
 from Card import Card
 from Team import Team
 from Player import CooperativePlayer, RandomPlayer, MaximizePointsPlayer, MaximizeRoundsWonPlayer, PredictorPlayer, Player
+from termcolor import colored
 
 
 class Game:
@@ -156,7 +157,7 @@ class Game:
 
         return rotated_list
 
-    def calculate_round_points(self, cardsPlayedInRound, gameTrumpSuit) -> tuple[int, int]:
+    def calculate_round_points(self, cardsPlayedInRound) -> tuple[int, int]:
         '''
             Calculate the points and the winner of the round
         '''
@@ -173,7 +174,7 @@ class Game:
             # if the card is of the trump suit and the winning card is not then
             # the card is the new winning card
             if card.suit == winningCard[0].suit and card.order > winningCard[0].order or\
-                    card.suit == gameTrumpSuit and winningCard[0].suit != gameTrumpSuit:
+                    card.suit == self.trump.suit and winningCard[0].suit != self.trump.suit:
                 winningCard = (card, i)
 
         # Accumulate the points of the round
@@ -204,18 +205,16 @@ class Game:
                     if j == 9:                      # Last card
                         self.trump = card           # Is the trump
 
+        # Print game details
         # For each player
         for player in self.playersOrder:
-            print(player.name)
-            print(player.get_strategy())
+            print(colored(f'{player.name} -> {player.team.name}', 'yellow', attrs=['underline']))
+            print(colored(player.get_strategy(), attrs=['bold']))
             # For each card
             for card in player.hand:
                 print(card.name)
-            #  print initial belief
-            # if player.get_strategy() == 'Deck Predictor' or player.get_strategy() == 'Cooperative Player':
-            #     print(player.beliefs)
             print("\n")
-        print(f'Trump card: {self.trump.name}')
+        print(colored(f'Trump card: {self.trump.name}\n\n', 'blue', attrs=['bold']))
             
     def update_beliefs(self, cardPlayed, round_suit, player) -> None:
         '''
@@ -223,15 +222,13 @@ class Game:
         '''
 
         for p in self.playersOrder:
-            if p.get_strategy() == 'Deck Predictor' or p.get_strategy() == 'Cooperative Player' and p.name != player.name:
+            if p.name != player.name and (p.get_strategy() == 'Deck Predictor' or p.get_strategy() == 'Cooperative Player'):
                 p.update_beliefs(cardPlayed, round_suit, player)
 
     def play_round(self) -> dict[str, str]:
         '''
             Play a round of the game
         '''
-
-        print('\n')
 
         roundSuit = ''
         round_info = {}
@@ -241,17 +238,17 @@ class Game:
         for i, player in enumerate(self.playersOrder):
             match player.get_strategy():
                 case 'Maximize Points Won' | 'Maximize Rounds Won':
-                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self) # fred wtf is this self seu sebas
+                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self)
                 case 'Deck Predictor' | 'Cooperative Player':
                     # Update beliefs of the players
                     card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self)
                 case _:
-                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder)
+                    card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit)
             
             self.update_beliefs(card_played, roundSuit, player)
 
         # Get the total points played in the round and the respective winner
-        roundPoints, winnerId = self.calculate_round_points(cardsPlayedInround, self.trump.suit)
+        roundPoints, winnerId = self.calculate_round_points(cardsPlayedInround)
 
         round_info["Winner"] = self.playersOrder[winnerId[1]].name
         round_info["Points"] = roundPoints
@@ -273,7 +270,7 @@ class Game:
 
         # For each of the 10 rounds
         for num_rounds in range(10):
-            print("\nRound " + str(num_rounds + 1) + ":")
+            print(colored("\nRound " + str(num_rounds + 1) + ":", 'green', attrs=['underline']))
             round_info = self.play_round()
             (self.game_info["Rounds"])[num_rounds + 1] = round_info
 

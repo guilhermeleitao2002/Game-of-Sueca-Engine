@@ -19,3 +19,6 @@ class Card:
         return self.name == value.name and self.suit == value.suit and\
             self.rank == value.rank and self.order == value.order and\
             self.value == value.value
+    
+    def __hash__(self) -> int:
+        return hash((self.suit, self.order))
