@@ -23,4 +23,4 @@ if __name__ == "__main__":
 
     with open(output_file, 'w') as f:
         json.dump(game.game_info, f, indent = 4)
-    print(f'Game log saved to {output_file}')
+    print(f'\nGame log saved to {output_file}')
