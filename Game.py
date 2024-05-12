@@ -263,7 +263,7 @@ class Game:
 
         return round_info
 
-    def play_game(self) -> None:
+    def play_game(self) -> dict[str, str]:
         '''
             Play the game of Sueca
         '''
@@ -281,9 +281,13 @@ class Game:
         if self.teams[0].score > self.teams[1].score:
             print()
             print(colored("Sporting wins", 'white', 'on_green'))
+            return self.teams[0].name
         elif self.teams[0].score == self.teams[1].score:
             print()
             print(colored("It's a tie!", 'white', 'on_dark_grey'))
+            return "ties"
         else:
             print()
             print(colored("Benfica wins!", 'white', 'on_red'))
+            return self.teams[1].name
+    
