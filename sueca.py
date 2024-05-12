@@ -21,6 +21,10 @@ if __name__ == "__main__":
     args = parse_arguments()
     print(args)
 
+    # Clean the output file
+    with open(args.o, 'w') as f:
+        f.write('')
+
     wins = {'Benfica': 0, 'Sporting': 0, 'ties': 0}
 
     for i in range(args.n):
@@ -36,8 +40,8 @@ if __name__ == "__main__":
         winner = game.play_game()
         wins[winner] += 1
 
-        with open(args.o, 'w') as f:
-            json.dump(game.game_info, f, indent = 4)
-        print(f'\nGame log saved to {args.o}')
+        with open(args.o, 'a') as f:
+            game.game_info['Game'] = i + 1
+            json.dump(game.game_info, f, indent = 4, sort_keys=True)
 
     print(colored(f'\nWins: {wins}', 'magenta', attrs=['bold']))
