@@ -215,7 +215,7 @@ class Game:
                 for card in player.hand:
                     print(card.name)
                 print("\n")
-            print(colored(f'Trump card: {self.trump.name}\n\n', 'blue', attrs=['bold']))
+        print(colored(f'Trump card: {self.trump.name}\n\n', 'blue', attrs=['bold']))
             
     def update_beliefs(self, cardPlayed, round_suit, player) -> None:
         '''
