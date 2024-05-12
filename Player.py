@@ -170,7 +170,7 @@ class RandomPlayer (Player):
             else:                               # if the player does not have cards of the same suit
                 cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
 
-        if self.verbose or mode == 'human':
+        if self.verbose or (mode == 'human' and self.name != 'Leitao'):
             print(colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
 
         return cardPlayed, round_suit
@@ -332,7 +332,7 @@ class CooperativePlayer(BeliefPlayer):
             else:                               # if the player does not have cards of the same suit
                 cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
 
-        if self.verbose or mode == 'human':
+        if self.verbose or (mode == 'human' and self.name != 'Leitao'):
             print(colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
 
         return cardPlayed, round_suit
@@ -422,7 +422,7 @@ class PredictorPlayer(BeliefPlayer):
             utility_per_card[card] = expected_utility
 
         # Print the card.name and its utility
-        if self.verbose:
+        if self.verbose and mode == 'auto':
             print(f"Player {self.name} has the following utilities: {[(card.name, utility_per_card[card]) for card in utility_per_card.keys()]}")
 
         # Get the card with the highest utility
