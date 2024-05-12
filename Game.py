@@ -283,4 +283,4 @@ class Game:
         elif self.teams[0].score == self.teams[1].score:
             print(colored("It's a tie!", 'white', 'on_dark_grey'))
         else:
-            print(colored("Benfica wins!", 'white', 'on_red'))
+            print(colored("\nBenfica wins!", 'white', 'on_red'))
