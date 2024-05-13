@@ -25,7 +25,7 @@ class Player:
         self.hand = []
         self.team = team
 
-    def add_card(self, card) -> None:
+    def add_card(self, card) -> None: 
         '''
             Add card to player hand and sort it by order to facilitate strategy implementation
         '''
@@ -183,6 +183,49 @@ class RandomPlayer (Player):
         return 'Random Agent'
 
 
+class GreedyPlayer(Player):
+    '''
+        GreedyPlayer ->
+            - name: player name
+            - team: team object to which the player belongs
+            - play_round(i, cards_played, round_suit): play a round of the game
+    '''
+
+    def __init__(self, id, name, team, v) -> None:
+        super().__init__(id, name, team, v)
+
+    def play_round(self, i, round_suit, mode) -> tuple[Card, str]:
+        '''
+            Play a round of the game of Sueca, selecting the highest ranked card 
+        '''
+
+        if i == 0:
+            card_played = self.hand[-1]
+            round_suit = card_played.suit
+            return card_played, round_suit
+
+        cards_of_the_same_suit = self.get_cards_by_suit(round_suit)
+        if len(cards_of_the_same_suit) != 0:    # if the player has cards of the same suit
+            card_played = cards_of_the_same_suit[-1]
+            self.hand.remove(card_played)
+        else:                               # if the player does not have cards of the same suit
+            card_played = self.hand[-1]
+            self.hand.remove(card_played)
+
+        if self.verbose or (mode == 'human' and self.name != 'Leitao'):
+            print(colored(f"{self.name} played {card_played.name}", 'green', attrs=['bold']))
+
+        return card_played, round_suit
+
+    def get_strategy(self) -> str:
+        '''
+            Return the strategy of the player
+            In this case, the strategy is just random
+        '''
+        return 'Greedy Player'
+
+
+
 class MaximizePointsPlayer(Player):
 
     def __init__(self, id, name, team, v) -> None:
@@ -190,11 +233,12 @@ class MaximizePointsPlayer(Player):
 
     def play_round(self, i, cards_played, round_suit, players_order, game, mode) -> Card:
         if i == 0:
-            cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
+            cardPlayed = self.hand[-1]
             round_suit = cardPlayed.suit
+
         else:
             cardsOfTheSameSuit = self.get_cards_by_suit(round_suit)
-            _, winner = game.calculate_round_points(cards_played, round_suit)
+            _, winner = game.calculate_round_points(cards_played)
             player_winner = players_order[winner[1]]
             if player_winner.team == self.team:  # if the same team
                 if cardsOfTheSameSuit:  # play strongest card from same suit
@@ -241,11 +285,11 @@ class MaximizeRoundsWonPlayer(Player):
 
     def play_round(self, i, cards_played, round_suit, players_order, game, mode):
         if i == 0:
-            cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
+            cardPlayed = self.hand[-1]
             round_suit = cardPlayed.suit
         else:
             cardsOfTheSameSuit = self.get_cards_by_suit(round_suit)
-            _, winner = game.calculate_round_points(cards_played, round_suit)
+            _, winner = game.calculate_round_points(cards_played)
             player_winner = players_order[winner[1]]
             if player_winner.team == self.team:  # if the same team
                 if cardsOfTheSameSuit:  # play weakest card from the same suit
@@ -319,7 +363,7 @@ class CooperativePlayer(BeliefPlayer):
             Play a round of the game of Sueca, selecting the card, considering
             the cards that its partner has, acting as a "team player"
         '''
-
+        # NOTE: what to do in this strategy?
         if i == 0:  # if the player is the first to play, play a random card
             cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
             round_suit = cardPlayed.suit

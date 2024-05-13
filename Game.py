@@ -1,7 +1,7 @@
 from random import randint, shuffle, choice
 from Card import Card
 from Team import Team
-from Player import CooperativePlayer, RandomPlayer, MaximizePointsPlayer, MaximizeRoundsWonPlayer, PredictorPlayer, Player
+from Player import CooperativePlayer, GreedyPlayer, RandomPlayer, MaximizePointsPlayer, MaximizeRoundsWonPlayer, PredictorPlayer, Player
 from termcolor import colored
 from time import sleep
 
@@ -44,12 +44,16 @@ class Game:
             case 'maxroundswon':
                 player1 = MaximizeRoundsWonPlayer(1, "Leitao", team1, self.verbose)
                 player2 = MaximizeRoundsWonPlayer(2, "Fred", team1, self.verbose)
-            case 'predictor':
-                player1 = PredictorPlayer(1, "Leitao", team1, self.verbose)
-                player2 = PredictorPlayer(2, "Fred", team1, self.verbose)
             case 'cooperative':
                 player1 = CooperativePlayer(1, "Leitao", team1, self.verbose)
                 player2 = CooperativePlayer(2, "Fred", team1, self.verbose)
+            case 'predictor':
+                player1 = PredictorPlayer(1, "Leitao", team1, self.verbose)
+                player2 = PredictorPlayer(2, "Fred", team1, self.verbose)
+            case 'greedy':
+                player1 = GreedyPlayer(1, "Leitao", team1, self.verbose)
+                player2 = GreedyPlayer(2, "Fred", team1, self.verbose)
+
             case _:  # default
                 raise ValueError("Invalid strategy")
 
@@ -69,6 +73,10 @@ class Game:
             case 'predictor':
                 player3 = PredictorPlayer(3, "Pedro", team2, self.verbose)
                 player4 = PredictorPlayer(4, "Sebas", team2, self.verbose)
+            case 'greedy':
+                player3 = GreedyPlayer(3, "Pedro", team2, self.verbose)
+                player4 = GreedyPlayer(4, "Sebas", team2, self.verbose)
+
             case _:  # default
                 raise ValueError("Invalid strategy")
 
