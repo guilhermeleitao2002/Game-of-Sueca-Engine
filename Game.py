@@ -254,7 +254,7 @@ class Game:
                     card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self, self.mode, num_round)
                 case _:
                     card_played, roundSuit = player.play_round(i, roundSuit, self.mode)
-            
+
             # In human mode, print the cards played by the player and let him chose
             if player.name == 'Leitao' and self.mode == 'human':
                 # Put the card played back in the hand

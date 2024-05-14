@@ -269,8 +269,8 @@ class MaximizePointsPlayer(Player):
                         cardPlayed = self.hand[0]  # play weakest card
                         self.hand.remove(cardPlayed)
 
-        if self.verbose:
-            print(cardPlayed.name)
+        if self.verbose or (mode == 'human' and self.name != 'Leitao'):
+            print(colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
 
         return cardPlayed, round_suit
 
@@ -325,8 +325,8 @@ class MaximizeRoundsWonPlayer(Player):
                         cardPlayed = self.hand[0]  # play weakest card
                         self.hand.remove(cardPlayed)
 
-        if self.verbose:
-            print(cardPlayed.name)
+        if self.verbose or (mode == 'human' and self.name != 'Leitao'):
+            print(colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
 
         return cardPlayed, round_suit
 
@@ -485,11 +485,11 @@ class PredictorPlayer(BeliefPlayer):
         ############################################################
         #NOTE: In here, put individual strategies that you remember#
         ############################################################
-        # if i == 0:    # In the first 5 rounds, if you are the first to play
-        #     # Avoid using the trump card by decreasing its utility
-        #     for card in utilities:
-        #         if self.get_card(card[0]).suit == game.trump.suit:
-        #             utilities[utilities.index(card)] = (card[0], card[1] - 1000)    # NOT REALLY DOING ANYTHING BUT IT SHOULD RIGHT?
+        if i == 0 and num_round < 2:    # In the first 5 rounds, if you are the first to play
+            # Avoid using the trump card by decreasing its utility
+            for card in utilities:
+                if self.get_card(card[0]).suit == game.trump.suit:
+                    utilities[utilities.index(card)] = (card[0], card[1] - 1000)    # NOT REALLY DOING ANYTHING BUT IT SHOULD RIGHT?
         ############################################################
         #NOTE: In here, put individual strategies that you remember#
         ############################################################
@@ -507,21 +507,6 @@ class PredictorPlayer(BeliefPlayer):
         best_card = self.get_card(utilities[0][0])
         if i == 0:
             round_suit = best_card.suit
-        self.hand.remove(best_card)
-
-        if self.verbose or (mode == 'human' and self.name != 'Leitao'):
-            print(
-                colored(f"{self.name} played {best_card.name}", 'green', attrs=['bold']))
-
-        return best_card, round_suit
-
-    def get_strategy(self) -> str:
-        '''
-            Return the strategy of the player
-            In this case, the strategy is just random
-        '''
-        return 'Deck Predictor'
-        round_suit = best_card.suit
         self.hand.remove(best_card)
 
         if self.verbose or (mode == 'human' and self.name != 'Leitao'):
