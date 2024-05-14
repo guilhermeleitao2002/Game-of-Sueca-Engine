@@ -7,6 +7,7 @@ from termcolor import colored
 
 ############################################# Player Super Classes #############################################
 
+
 class Player:
     '''
         Player ->
@@ -25,7 +26,7 @@ class Player:
         self.hand = []
         self.team = team
 
-    def add_card(self, card) -> None: 
+    def add_card(self, card) -> None:
         '''
             Add card to player hand and sort it by order to facilitate strategy implementation
         '''
@@ -45,7 +46,7 @@ class Player:
                 filtered_hand.append(card)
 
         return filtered_hand
-    
+
     def get_partner(self) -> 'Player':
         '''
             Get the partner of the player
@@ -75,7 +76,7 @@ class BeliefPlayer(Player):
         super().__init__(id, name, team, v)
 
         # Store the belief at each timestamp [player, suit, card]
-        self.beliefs = np.ones((4,4,10)) / 3
+        self.beliefs = np.ones((4, 4, 10)) / 3
         # Set the beliefs of the player itself to 0
         self.beliefs[self.id - 1] = 0
 
@@ -93,16 +94,17 @@ class BeliefPlayer(Player):
                 return 2
             case "spades":
                 return 3
-            case _ :
+            case _:
                 raise ValueError("Invalid Suit")
-            
+
     def update_beliefs_initial(self, card) -> None:
         '''
             Update the beliefs of the player after the initial handing of cards
         '''
 
         self.beliefs[:, self.obtain_suit_index(card.suit), card.order] = 0
-        self.beliefs[self.id - 1, self.obtain_suit_index(card.suit), card.order] = 1
+        self.beliefs[self.id - 1,
+                     self.obtain_suit_index(card.suit), card.order] = 1
 
     def update_beliefs(self, card: Card, round_suit: str, player: Player) -> None:
         '''
@@ -111,7 +113,7 @@ class BeliefPlayer(Player):
 
         if self.verbose:
             print(f"Player {self.name} saw {card.name}")
-        
+
         # After a card spotted no one will have it in their hand
         suit = self.obtain_suit_index(card.suit)
         self.beliefs[:, suit, card.order] = 0
@@ -131,7 +133,6 @@ class BeliefPlayer(Player):
                 for p in range(4):
                     if self.beliefs[p, j, i] != 0:
                         self.beliefs[p, j, i] = 1 / num_players
-
 
         # NOTE: This is a simple check to see if the beliefs are valid (REMOVE AFTERWARDS)
         for j in range(4):
@@ -171,7 +172,8 @@ class RandomPlayer (Player):
                 cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
 
         if self.verbose or (mode == 'human' and self.name != 'Leitao'):
-            print(colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
+            print(
+                colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
 
         return cardPlayed, round_suit
 
@@ -196,12 +198,13 @@ class GreedyPlayer(Player):
 
     def play_round(self, i, round_suit, mode) -> tuple[Card, str]:
         '''
-            Play a round of the game of Sueca, selecting the highest ranked card 
+            Play a round of the game of Sueca, selecting the highest ranked card
         '''
 
         if i == 0:
             card_played = self.hand[-1]
             round_suit = card_played.suit
+            self.hand.remove(card_played)
             return card_played, round_suit
 
         cards_of_the_same_suit = self.get_cards_by_suit(round_suit)
@@ -213,7 +216,8 @@ class GreedyPlayer(Player):
             self.hand.remove(card_played)
 
         if self.verbose or (mode == 'human' and self.name != 'Leitao'):
-            print(colored(f"{self.name} played {card_played.name}", 'green', attrs=['bold']))
+            print(
+                colored(f"{self.name} played {card_played.name}", 'green', attrs=['bold']))
 
         return card_played, round_suit
 
@@ -225,7 +229,6 @@ class GreedyPlayer(Player):
         return 'Greedy Player'
 
 
-
 class MaximizePointsPlayer(Player):
 
     def __init__(self, id, name, team, v) -> None:
@@ -235,7 +238,7 @@ class MaximizePointsPlayer(Player):
         if i == 0:
             cardPlayed = self.hand[-1]
             round_suit = cardPlayed.suit
-
+            self.hand.remove(cardPlayed)
         else:
             cardsOfTheSameSuit = self.get_cards_by_suit(round_suit)
             _, winner = game.calculate_round_points(cards_played)
@@ -287,6 +290,7 @@ class MaximizeRoundsWonPlayer(Player):
         if i == 0:
             cardPlayed = self.hand[-1]
             round_suit = cardPlayed.suit
+            self.hand.remove(cardPlayed)
         else:
             cardsOfTheSameSuit = self.get_cards_by_suit(round_suit)
             _, winner = game.calculate_round_points(cards_played)
@@ -341,7 +345,7 @@ class CooperativePlayer(BeliefPlayer):
             - play_round(i, cards_played, round_suit): play a round of the game
     '''
 
-    def __init__(self,id,  name, team, v) -> None:
+    def __init__(self, id,  name, team, v) -> None:
         super().__init__(id, name, team, v)
 
     def update_beliefs_initial(self, card) -> None:
@@ -377,7 +381,8 @@ class CooperativePlayer(BeliefPlayer):
                 cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
 
         if self.verbose or (mode == 'human' and self.name != 'Leitao'):
-            print(colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
+            print(
+                colored(f"{self.name} played {cardPlayed.name}", 'green', attrs=['bold']))
 
         return cardPlayed, round_suit
 
@@ -390,7 +395,7 @@ class CooperativePlayer(BeliefPlayer):
 
 class PredictorPlayer(BeliefPlayer):
 
-    def __init__(self,id,  name, team, v) -> None:
+    def __init__(self, id,  name, team, v) -> None:
         super().__init__(id, name, team, v)
 
     def update_beliefs_initial(self, card) -> None:
@@ -422,7 +427,8 @@ class PredictorPlayer(BeliefPlayer):
         # Get the probability of each card in beliefs
         cards_prob = []
         for card in player_cards:
-            cards_prob.append(self.beliefs[player.id - 1, self.obtain_suit_index(card.suit), card.order])
+            cards_prob.append(
+                self.beliefs[player.id - 1, self.obtain_suit_index(card.suit), card.order])
 
         return player_cards, cards_prob
 
@@ -436,28 +442,36 @@ class PredictorPlayer(BeliefPlayer):
         cards_probability = {}
         for player in players_order:
             if i == 0 or not player.get_cards_by_suit(round_suit):
-                cards_to_play[player.id], cards_probability[player.id] = self.get_player_possible_cards(player)
+                cards_to_play[player.id], cards_probability[player.id] = self.get_player_possible_cards(
+                    player)
             else:
-                cards_to_play[player.id], cards_probability[player.id] = self.get_player_possible_cards(player, round_suit)
+                cards_to_play[player.id], cards_probability[player.id] = self.get_player_possible_cards(
+                    player, round_suit)
 
         utility_per_card = {}
 
         for card in cards_to_play[self.id]:
             expected_utility = 0
-            other_players_ids = [player.id for player in players_order if players_order.index(player) > i]
-            possible_plays_combinations = [cards_to_play[pid] for pid in other_players_ids]
-            probabilities_combinations = [cards_probability[pid] for pid in other_players_ids]
+            other_players_ids = [
+                player.id for player in players_order if players_order.index(player) > i]
+            possible_plays_combinations = [
+                cards_to_play[pid] for pid in other_players_ids]
+            probabilities_combinations = [
+                cards_probability[pid] for pid in other_players_ids]
 
             # Create cartesian product of all combinations with their probabilities
             for other_cards_tuple in product(*possible_plays_combinations):
                 combination_probability = np.prod([
-                    probabilities_combinations[j][possible_plays_combinations[j].index(card)]
+                    probabilities_combinations[j][possible_plays_combinations[j].index(
+                        card)]
                     for j, card in enumerate(other_cards_tuple)
                 ])
 
                 # Simulate this card being played along with the combination
-                simulated_cards_played = cards_played_in_round + [card] + list(other_cards_tuple)
-                round_points, winning_card = game.calculate_round_points(simulated_cards_played)
+                simulated_cards_played = cards_played_in_round + \
+                    [card] + list(other_cards_tuple)
+                round_points, winning_card = game.calculate_round_points(
+                    simulated_cards_played)
                 if players_order[winning_card[1]].team.name == self.team.name:
                     expected_utility += round_points * combination_probability
                 else:
@@ -465,7 +479,8 @@ class PredictorPlayer(BeliefPlayer):
 
             utility_per_card[card] = expected_utility
 
-        utilities = [(card.name, utility_per_card[card]) for card in utility_per_card.keys()]
+        utilities = [(card.name, utility_per_card[card])
+                     for card in utility_per_card.keys()]
 
         ############################################################
         #NOTE: In here, put individual strategies that you remember#
@@ -484,7 +499,8 @@ class PredictorPlayer(BeliefPlayer):
 
         # Print the card.name and its utility
         if self.verbose and mode == 'auto':
-            print(f"Player {self.name} has the following utilities: {utilities}")
+            print(
+                f"Player {self.name} has the following utilities: {utilities}")
 
         # Get the card with the highest utility
         # If there is a draw, the first card with the lowest card.order is chosen
@@ -494,7 +510,23 @@ class PredictorPlayer(BeliefPlayer):
         self.hand.remove(best_card)
 
         if self.verbose or (mode == 'human' and self.name != 'Leitao'):
-            print(colored(f"{self.name} played {best_card.name}", 'green', attrs=['bold']))
+            print(
+                colored(f"{self.name} played {best_card.name}", 'green', attrs=['bold']))
+
+        return best_card, round_suit
+
+    def get_strategy(self) -> str:
+        '''
+            Return the strategy of the player
+            In this case, the strategy is just random
+        '''
+        return 'Deck Predictor'
+        round_suit = best_card.suit
+        self.hand.remove(best_card)
+
+        if self.verbose or (mode == 'human' and self.name != 'Leitao'):
+            print(
+                colored(f"{self.name} played {best_card.name}", 'green', attrs=['bold']))
 
         return best_card, round_suit
 
