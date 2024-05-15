@@ -1,11 +1,11 @@
 import numpy as np
 from random import randint
 from Card import Card
-import copy
+from copy import deepcopy
 from itertools import product
 from termcolor import colored
 
-############################################# Player Super Classes #############################################
+############################################# Player General Classes #############################################
 
 
 class Player:
@@ -64,7 +64,7 @@ class Player:
                 return card
 
 
-class BeliefPlayer(Player):
+class BeliefPlayer (Player):
     '''
         BeliefPlayer ->
             - name: player name
@@ -185,7 +185,7 @@ class RandomPlayer (Player):
         return 'Random Agent'
 
 
-class GreedyPlayer(Player):
+class GreedyPlayer (Player):
     '''
         GreedyPlayer ->
             - name: player name
@@ -229,7 +229,7 @@ class GreedyPlayer(Player):
         return 'Greedy Player'
 
 
-class MaximizePointsPlayer(Player):
+class MaximizePointsPlayer (Player):
 
     def __init__(self, id, name, team, v) -> None:
         super().__init__(id, name, team, v)
@@ -281,7 +281,7 @@ class MaximizePointsPlayer(Player):
         return 'Maximize Points Won'
 
 
-class MaximizeRoundsWonPlayer(Player):
+class MaximizeRoundsWonPlayer (Player):
 
     def __init__(self, id, name, team, v) -> None:
         super().__init__(id, name, team, v)
@@ -337,7 +337,7 @@ class MaximizeRoundsWonPlayer(Player):
         return 'Maximize Rounds Won'
 
 
-class CooperativePlayer(BeliefPlayer):
+class CooperativePlayer (BeliefPlayer):
     '''
         CooperativePlayer ->
             - name: player name
@@ -393,7 +393,7 @@ class CooperativePlayer(BeliefPlayer):
         return 'Cooperative Player'
 
 
-class PredictorPlayer(BeliefPlayer):
+class PredictorPlayer (BeliefPlayer):
 
     def __init__(self, id,  name, team, v) -> None:
         super().__init__(id, name, team, v)
@@ -420,9 +420,9 @@ class PredictorPlayer(BeliefPlayer):
         if suit != 'all':
             player_cards = player.get_cards_by_suit(suit)
             if player_cards == []:
-                player_cards = copy.deepcopy(player.hand)
+                player_cards = deepcopy(player.hand)
         else:
-            player_cards = copy.deepcopy(player.hand)
+            player_cards = deepcopy(player.hand)
 
         # Get the probability of each card in beliefs
         cards_prob = []

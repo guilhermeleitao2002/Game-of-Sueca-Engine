@@ -1,15 +1,15 @@
 ############################################# Libraries #############################################
 
-import json
+from json import dumps
 from Game import Game
-import argparse
+from argparse import ArgumentParser
 from termcolor import colored
 
 
 ########################################## Helper Functions ##########################################
 
 def parse_arguments():
-    parser = argparse.ArgumentParser(description='Sueca game simulator')
+    parser = ArgumentParser(description='Sueca game simulator')
 
     parser.add_argument('-o', '--output', type=str, required=True, help='Output file to save the game log')
     parser.add_argument('-t1', '--team_1', type=str, required=True, help='Strategy for team 1: random, maxpointswon, maxroundswon, cooperative, greedy, predictor')
@@ -54,7 +54,7 @@ if __name__ == "__main__":
 
             with open(args.output, 'a') as f:
                 game.game_info['Game'] = i + 1
-                f.write(json.dumps(game.game_info, indent = 4, sort_keys=True) + f'{"," if i < args.num_games - 1 else ""}\n')
+                f.write(dumps(game.game_info, indent = 4, sort_keys=True) + f'{"," if i < args.num_games - 1 else ""}\n')
 
         # Close the output file
         with open(args.output, 'a') as f:
