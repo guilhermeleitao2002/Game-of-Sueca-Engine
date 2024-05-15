@@ -28,9 +28,9 @@ if __name__ == "__main__":
         args = parse_arguments()
         verbose = args.verbose
 
-        # Clean the output file
+        # Open and clean the output file
         with open(args.output, 'w') as f:
-            f.write('')
+            f.write('[\n')
 
         wins = {'Benfica': 0, 'Sporting': 0, 'ties': 0}
 
@@ -54,9 +54,14 @@ if __name__ == "__main__":
 
             with open(args.output, 'a') as f:
                 game.game_info['Game'] = i + 1
-                json.dump(game.game_info, f, indent = 4, sort_keys=True)
+                f.write(json.dumps(game.game_info, indent = 4, sort_keys=True) + f'{"," if i < args.num_games - 1 else ""}\n')
+
+        # Close the output file
+        with open(args.output, 'a') as f:
+            f.write(']')
 
         print(colored(f'\nWins: {wins}', 'magenta', attrs=['bold']))
+
     except KeyboardInterrupt:
         print(colored('\nGoodbye!', 'blue'))
         exit(0)
