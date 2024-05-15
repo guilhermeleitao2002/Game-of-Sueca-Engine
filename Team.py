@@ -14,6 +14,7 @@ class Team:
         self.name = name
         self.players = []
         self.score = 0
+        self.initial_points = 0
 
     def add_player(self, player: Player) -> None:
         '''
@@ -46,5 +47,6 @@ class Team:
             player_info["strategy"] = player.get_strategy()
             team['players'].append(player_info)
         team['score'] = self.score
+        team['initial_points'] = self.initial_points
 
         return team

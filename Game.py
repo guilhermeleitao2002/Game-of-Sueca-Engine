@@ -215,6 +215,7 @@ class Game:
                 # Pop a card at random
                 card = self.deck.pop(randint(0, len(self.deck) - 1))
                 player.add_card(card)
+                
 
                 # Update beliefs of the player
                 if player.get_strategy() == 'Deck Predictor' or player.get_strategy() == 'Cooperative Player':

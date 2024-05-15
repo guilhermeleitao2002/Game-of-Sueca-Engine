@@ -32,6 +32,7 @@ class Player:
         '''
 
         self.hand.append(card)
+        self.team.initial_points += card.value
         self.hand = sorted(self.hand, key=lambda x: x.order)
 
     def get_cards_by_suit(self, suit) -> list:
