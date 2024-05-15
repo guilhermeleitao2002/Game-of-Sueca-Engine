@@ -362,7 +362,7 @@ class CooperativePlayer(BeliefPlayer):
 
         super().update_beliefs(card, round_suit, player, mode)
 
-    def play_round(self, i, cards_played_in_round, round_suit, players_order, mode, num_round) -> tuple[Card, str]:
+    def play_round(self, i, cards_played_in_round, round_suit, players_order, game, mode, num_round) -> tuple[Card, str]:
         '''
             Play a round of the game of Sueca, selecting the card, considering
             the cards that its partner has, acting as a "team player"
