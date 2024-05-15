@@ -106,12 +106,12 @@ class BeliefPlayer(Player):
         self.beliefs[self.id - 1,
                      self.obtain_suit_index(card.suit), card.order] = 1
 
-    def update_beliefs(self, card: Card, round_suit: str, player: Player) -> None:
+    def update_beliefs(self, card: Card, round_suit: str, player: Player, mode:str) -> None:
         '''
             Updates the new belief of the player, after a card has been spotted
         '''
 
-        if self.verbose:
+        if self.verbose and mode == 'auto':
             print(f"Player {self.name} saw {card.name}")
 
         # After a card spotted no one will have it in their hand
@@ -355,12 +355,12 @@ class CooperativePlayer(BeliefPlayer):
 
         return super().update_beliefs_initial(card)
 
-    def update_beliefs(self, card, round_suit, player) -> None:
+    def update_beliefs(self, card, round_suit, player, mode) -> None:
         '''
             The card was seen so we now know that no player no longer has it
         '''
 
-        super().update_beliefs(card, round_suit, player)
+        super().update_beliefs(card, round_suit, player, mode)
 
     def play_round(self, i, cards_played_in_round, round_suit, players_order, mode, num_round) -> tuple[Card, str]:
         '''
@@ -405,12 +405,12 @@ class PredictorPlayer(BeliefPlayer):
 
         return super().update_beliefs_initial(card)
 
-    def update_beliefs(self, card, round_suit, player) -> None:
+    def update_beliefs(self, card, round_suit, player, mode) -> None:
         '''
             Update the beliefs of the player after a card has been spotted
         '''
 
-        super().update_beliefs(card, round_suit, player)
+        super().update_beliefs(card, round_suit, player, mode)
 
     def get_player_possible_cards(self, player, suit='all') -> list:
         '''
@@ -482,17 +482,17 @@ class PredictorPlayer(BeliefPlayer):
         utilities = [(card.name, utility_per_card[card])
                      for card in utility_per_card.keys()]
 
-        ############################################################
-        #NOTE: In here, put individual strategies that you remember#
-        ############################################################
-        if i == 0 and num_round < 2:    # In the first 5 rounds, if you are the first to play
+        ##############################################################
+        # NOTE: In here, put individual strategies that you remember #
+        ##############################################################
+        if num_round < 2:    # In the first 2 rounds, if you are the first to play
             # Avoid using the trump card by decreasing its utility
             for card in utilities:
                 if self.get_card(card[0]).suit == game.trump.suit:
                     utilities[utilities.index(card)] = (card[0], card[1] - 1000)    # NOT REALLY DOING ANYTHING BUT IT SHOULD RIGHT?
-        ############################################################
-        #NOTE: In here, put individual strategies that you remember#
-        ############################################################
+        ##############################################################
+        # NOTE: In here, put individual strategies that you remember #
+        ##############################################################
 
         # Sort the cards by utility
         utilities = sorted(utilities, key=lambda x: x[1], reverse=True)
@@ -509,9 +509,8 @@ class PredictorPlayer(BeliefPlayer):
             round_suit = best_card.suit
         self.hand.remove(best_card)
 
-        if self.verbose or (mode == 'human' and self.name != 'Leitao'):
-            print(
-                colored(f"{self.name} played {best_card.name}", 'green', attrs=['bold']))
+        if self.verbose and mode == 'auto' or (mode == 'human' and self.name != 'Leitao'):
+            print(colored(f"{self.name} played {best_card.name}", 'green', attrs=['bold']))
 
         return best_card, round_suit
 
