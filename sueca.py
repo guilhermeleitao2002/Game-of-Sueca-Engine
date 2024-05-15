@@ -1,9 +1,10 @@
 ############################################# Libraries #############################################
 
-from json import dumps
+from json import dumps, load
 from Game import Game
 from argparse import ArgumentParser
 from termcolor import colored
+import matplotlib.pyplot as plt
 
 
 ########################################## Helper Functions ##########################################
@@ -12,13 +13,41 @@ def parse_arguments():
     parser = ArgumentParser(description='Sueca game simulator')
 
     parser.add_argument('-o', '--output', type=str, required=True, help='Output file to save the game log')
-    parser.add_argument('-s', '--sporting', type=str, required=True, help='Strategy for team Sporting: random, maxpointswon, maxroundswon, cooperative, greedy, predictor')
-    parser.add_argument('-b', '--benfica', type=str, required=True, help='Strategy for team Benfica: random, maxpointswon, maxroundswon, cooperative, greedy, predictor')
+    parser.add_argument('-s', '--sporting', type=str, required=True, help=f'Strategy for team Sporting: {colored("random", "green", attrs=["bold"])}, {colored("maxpointswon", "green", attrs=["bold"])}, {colored("maxroundswon", "green", attrs=["bold"])}, {colored("cooperative", "green", attrs=["bold"])}, {colored("greedy", "green", attrs=["bold"])}, {colored("predictor", "green", attrs=["bold"])}')
+    parser.add_argument('-b', '--benfica', type=str, required=True, help=f'Strategy for team Benfica: {colored("random", "green", attrs=["bold"])}, {colored("maxpointswon", "green", attrs=["bold"])}, {colored("maxroundswon", "green", attrs=["bold"])}, {colored("cooperative", "green", attrs=["bold"])}, {colored("greedy", "green", attrs=["bold"])}, {colored("predictor", "green", attrs=["bold"])}')
     parser.add_argument('-n', '--num_games', type=int, default=1, help='Number of games to simulate')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Print the game information as it unfolds')
-    parser.add_argument('-m', '--mode', type=str, default='auto', help='Mode of the game: auto (machine vs machine) or human (machine vs user)')
+    parser.add_argument('-m', '--mode', type=str, default='auto', help=f'Mode of the game: {colored("auto", "green", attrs=["bold"])} (machine vs machine) or {colored("human", "green", attrs=["bold"])} (machine vs user)')
+
+    # the game mode can only be 'auto' or 'human'
+    if parser.parse_args().mode not in ['auto', 'human'] or\
+       parser.parse_args().sporting not in ['random', 'maxpointswon', 'maxroundswon', 'cooperative', 'greedy', 'predictor'] or\
+       parser.parse_args().benfica not in ['random', 'maxpointswon', 'maxroundswon', 'cooperative', 'greedy', 'predictor']:
+        # print the help message and exit
+        parser.print_help()
 
     return parser.parse_args()
+
+def plot_results(info, benfica_strat, sporting_strat):
+    # Data to bar plot
+    strategies = [benfica_strat, sporting_strat, 'ties']
+    wins = [info['Benfica'], info['Sporting'], info['ties']]
+
+    # Make it so that if some team has 0 wins, we remove entries from both lists
+    for i in range(len(wins)):
+        if wins[i] == 0:
+            del wins[i]
+            del strategies[i]
+
+    # Plot
+    _, ax = plt.subplots()
+    ax.bar(strategies, wins, color=['red', 'green', 'grey'])
+    ax.set_ylabel('Wins')	
+    ax.set_title('Game Results')
+    plt.xticks(rotation=15)
+
+    # Save the plot
+    plt.savefig(f'./results/{sporting_strat}_{benfica_strat}.png')
 
 
 ########################################## Main Program #############################################
@@ -26,6 +55,7 @@ def parse_arguments():
 if __name__ == "__main__":
     try:
         args = parse_arguments()
+        
         verbose = args.verbose
 
         # Open and clean the output file
@@ -61,6 +91,9 @@ if __name__ == "__main__":
             f.write(']')
 
         print(colored(f'\nWins: {wins}', 'magenta', attrs=['bold']))
+        
+        if args.mode == 'auto':
+            plot_results(wins, args.benfica, args.sporting)
 
     except KeyboardInterrupt:
         print(colored('\nGoodbye!', 'blue'))
