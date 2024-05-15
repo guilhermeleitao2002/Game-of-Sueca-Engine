@@ -98,6 +98,16 @@ class Game:
         # Create deck
         self.deck = self.create_deck()
 
+    def get_partner(self, player:str) -> Player:
+        '''
+            Get the partner of the player
+        '''
+
+        for team in self.teams:
+            for p in team.players:
+                if p.name != player:
+                    return p
+
     def create_deck(self) -> list[Card]:
         '''
             Create a deck of 40 cards with the following suits:
@@ -225,7 +235,7 @@ class Game:
                     print(card.name)
                 print("\n")
         if self.verbose or self.mode == 'human':
-            print(colored(f'Trump card: {self.trump.name}\n\n', 'blue', attrs=['bold']))
+            print(colored(f'Trump card: {self.trump.name}\n', 'blue', attrs=['bold']))
             
     def update_beliefs(self, cardPlayed, round_suit, player) -> None:
         '''
@@ -234,7 +244,7 @@ class Game:
 
         for p in self.playersOrder:
             if p.name != player.name and (p.get_strategy() == 'Deck Predictor' or p.get_strategy() == 'Cooperative Player'):
-                p.update_beliefs(cardPlayed, round_suit, player)
+                p.update_beliefs(cardPlayed, round_suit, player, self.mode)
 
     def play_round(self, num_round) -> dict[str, str]:
         '''
@@ -293,7 +303,7 @@ class Game:
 
             # If the round is in human mode, wait for 5 seconds
             if self.mode == 'human':
-                sleep(5)
+                sleep(2)
 
         # Get the total points played in the round and the respective winner
         roundPoints, winnerId = self.calculate_round_points(cardsPlayedInround)
