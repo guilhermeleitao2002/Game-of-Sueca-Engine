@@ -14,6 +14,8 @@ class Game:
             - deck: list of Card objects
             - trump: trump card for that game
             - game_info: dictionary with game information
+            - verbose: boolean to print game details
+            - mode: string with the mode of the game (auto or human)
     '''
 
     def __init__(self, team_1_strategy: str, team_2_strategy: str, v:bool, mode:str) -> None:
@@ -119,7 +121,7 @@ class Game:
                 - 2, 3, 4, 5, 6, J, Q, K, 7, A
             that have the respective values:
                 - 0, 0, 0, 0, 0, 2, 3, 4, 10, 11
-            '''
+        '''
 
         # Create deck suits
         suits = ["hearts", "diamonds", "clubs", "spades"]
@@ -165,7 +167,7 @@ class Game:
 
         return deck
 
-    def rotate_order_to_winner(self, playersOrderList, winner) -> list[Player]:
+    def rotate_order_to_winner(self, playersOrderList:list[Player], winner:int) -> list[Player]:
         '''
             Rotate the list of players to the winner of the round
         '''
@@ -176,7 +178,7 @@ class Game:
 
         return rotated_list
 
-    def calculate_round_points(self, cardsPlayedInRound) -> tuple[int, int]:
+    def calculate_round_points(self, cardsPlayedInRound:list[Card]) -> tuple[int, int]:
         '''
             Calculate the points and the winner of the round
         '''
@@ -238,7 +240,7 @@ class Game:
         if self.verbose or self.mode == 'human':
             print(colored(f'Trump card: {self.trump.name}\n', 'blue', attrs=['bold']))
             
-    def update_beliefs(self, cardPlayed, round_suit, player) -> None:
+    def update_beliefs(self, cardPlayed:Card, round_suit:str, player:Player) -> None:
         '''
             Update the beliefs of the players except the one that played the card (no need!)
         '''
@@ -247,7 +249,7 @@ class Game:
             if p.name != player.name and (p.get_strategy() == 'Deck Predictor' or p.get_strategy() == 'Cooperative Player'):
                 p.update_beliefs(cardPlayed, round_suit, player, self.mode)
 
-    def play_round(self, num_round) -> dict[str, str]:
+    def play_round(self, num_round:int) -> dict[str, str]:
         '''
             Play a round of the game
         '''
@@ -261,8 +263,10 @@ class Game:
             match player.get_strategy():
                 case 'Maximize Points Won' | 'Maximize Rounds Won':
                     card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self, self.mode)
-                case 'Deck Predictor' | 'Cooperative Player':
+                case 'Deck Predictor':
                     card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self, self.mode, num_round)
+                case 'Cooperative Player':
+                    card_played, roundSuit = player.play_round(i, roundSuit, self.mode)
                 case _:
                     card_played, roundSuit = player.play_round(i, roundSuit, self.mode)
 

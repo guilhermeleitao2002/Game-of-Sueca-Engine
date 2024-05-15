@@ -1,15 +1,19 @@
 ############################################# Libraries #############################################
 
-from json import dumps, load
+from json import dumps
 from Game import Game
 from argparse import ArgumentParser
 from termcolor import colored
-import matplotlib.pyplot as plt
+from matplotlib.pyplot import subplots, savefig, xticks
 
 
 ########################################## Helper Functions ##########################################
 
 def parse_arguments():
+    '''
+        Parses the command line arguments
+    '''
+
     parser = ArgumentParser(description='Sueca game simulator')
 
     parser.add_argument('-o', '--output', type=str, required=True, help='Output file to save the game log')
@@ -29,6 +33,10 @@ def parse_arguments():
     return parser.parse_args()
 
 def plot_results(info, benfica_strat, sporting_strat):
+    '''
+        Plots the results of the games in a bar plot
+    '''
+
     # Data to bar plot
     strategies = [benfica_strat, sporting_strat, 'ties']
     wins = [info['Benfica'], info['Sporting'], info['ties']]
@@ -40,14 +48,14 @@ def plot_results(info, benfica_strat, sporting_strat):
             del strategies[i]
 
     # Plot
-    _, ax = plt.subplots()
+    _, ax = subplots()
     ax.bar(strategies, wins, color=['red', 'green', 'grey'])
     ax.set_ylabel('Wins')	
     ax.set_title('Game Results')
-    plt.xticks(rotation=15)
+    xticks(rotation=15)
 
     # Save the plot
-    plt.savefig(f'./results/{sporting_strat}_{benfica_strat}.png')
+    savefig(f'./results/{sporting_strat}_{benfica_strat}.png')
 
 
 ########################################## Main Program #############################################

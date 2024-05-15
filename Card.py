@@ -8,7 +8,7 @@ class Card:
             - value: card value (0, 2, 3, 4, 10, 11)
     '''
     
-    def __init__ (self, name, suit, rank) -> None:
+    def __init__ (self, name:str, suit:str, rank:str) -> None:
         self.name = name
         self.suit = suit
         self.rank = rank

@@ -1,13 +1,12 @@
 from Player import Player
 
-
 class Team:
     '''
         Team ->
             - name: team name
             - players: list of Player objects
             - score: team score (0 - 120)
-            - add_player(player): add player to team
+            - initial_points: initial points of the team (0 - 120)
     '''
 
     def __init__(self, name) -> None:
@@ -16,14 +15,14 @@ class Team:
         self.score = 0
         self.initial_points = 0
 
-    def add_player(self, player: Player) -> None:
+    def add_player(self, player: 'Player') -> None:
         '''
             Add player to the team
         '''
 
         self.players.append(player)
 
-    def get_partner(self, player: Player) -> Player:
+    def get_partner(self, player: 'Player') -> 'Player':
         '''
             Get the partner of a player
         '''

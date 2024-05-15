@@ -4,9 +4,10 @@ from Card import Card
 from copy import deepcopy
 from itertools import product
 from termcolor import colored
+import Team
+import Game
 
 ############################################# Player General Classes #############################################
-
 
 class Player:
     '''
@@ -15,18 +16,17 @@ class Player:
             - id: id of the player
             - hand: list of Card objects the player has (initially 10)
             - team: team object to which the player belongs
-            - add_card(card): add card to player hand and sort it by order
-            - get_cards_by_suit(suit): get all cards of a given suit
+            - verbose: print the player actions        
     '''
 
-    def __init__(self, id, name, team, v) -> None:
+    def __init__(self, id:int, name:str, team:'Team', v:bool) -> None:
         self.verbose = v
         self.id = id
         self.name = name
         self.hand = []
         self.team = team
 
-    def add_card(self, card) -> None:
+    def add_card(self, card:Card) -> None:
         '''
             Add card to player hand and sort it by order to facilitate strategy implementation
         '''
@@ -35,7 +35,7 @@ class Player:
         self.team.initial_points += card.value
         self.hand = sorted(self.hand, key=lambda x: x.order)
 
-    def get_cards_by_suit(self, suit) -> list:
+    def get_cards_by_suit(self, suit:str) -> list[Card]:
         '''
             Get all cards of a given suit
         '''
@@ -55,7 +55,7 @@ class Player:
 
         return self.team.get_partner(self)
 
-    def get_card(self, card_name) -> Card:
+    def get_card(self, card_name:str) -> Card:
         '''
             Get the card object from the player's hand
         '''
@@ -68,12 +68,14 @@ class Player:
 class BeliefPlayer (Player):
     '''
         BeliefPlayer ->
+            - id: id of the player
             - name: player name
             - team: team object to which the player belongs
-            - play_round(i, cards_played, round_suit): play a round of the game
+            - v: verbose
+            - beliefs: beliefs of the player
     '''
 
-    def __init__(self, id, name, team, v) -> None:
+    def __init__(self, id:int, name:str, team:'Team', v:bool) -> None:
         super().__init__(id, name, team, v)
 
         # Store the belief at each timestamp [player, suit, card]
@@ -98,7 +100,7 @@ class BeliefPlayer (Player):
             case _:
                 raise ValueError("Invalid Suit")
 
-    def update_beliefs_initial(self, card) -> None:
+    def update_beliefs_initial(self, card:Card) -> None:
         '''
             Update the beliefs of the player after the initial handing of cards
         '''
@@ -135,27 +137,22 @@ class BeliefPlayer (Player):
                     if self.beliefs[p, j, i] != 0:
                         self.beliefs[p, j, i] = 1 / num_players
 
-        # NOTE: This is a simple check to see if the beliefs are valid (REMOVE AFTERWARDS)
-        for j in range(4):
-            for k in range(10):
-                if not np.sum(self.beliefs[:, j, k]) == 1 and not np.sum(self.beliefs[:, j, k]) == 0:
-                    raise ValueError("Invalid Belief")
-
 
 ############################################# Player Sub Classes #############################################
 
 class RandomPlayer (Player):
     '''
         RandomPlayer ->
+            - id: id of the player
             - name: player name
             - team: team object to which the player belongs
-            - play_round(i, cards_played, round_suit): play a round of the game
+            - v: verbose
     '''
 
-    def __init__(self, id, name, team, v) -> None:
+    def __init__(self, id:int, name:str, team:'Team', v:bool) -> None:
         super().__init__(id, name, team, v)
 
-    def play_round(self, i, round_suit, mode) -> Card:
+    def play_round(self, i:int, round_suit:str, mode:str) -> Card:
         '''
             Play a round of the game of Sueca, selecting a card at random in each -round
         '''
@@ -183,21 +180,23 @@ class RandomPlayer (Player):
             Return the strategy of the player
             In this case, the strategy is just random
         '''
+
         return 'Random Agent'
 
 
 class GreedyPlayer (Player):
     '''
         GreedyPlayer ->
+            - id: id of the player
             - name: player name
             - team: team object to which the player belongs
-            - play_round(i, cards_played, round_suit): play a round of the game
+            - v: verbose
     '''
 
-    def __init__(self, id, name, team, v) -> None:
+    def __init__(self, id:int, name:str, team:'Team', v:bool) -> None:
         super().__init__(id, name, team, v)
 
-    def play_round(self, i, round_suit, mode) -> tuple[Card, str]:
+    def play_round(self, i:int, round_suit:str, mode:str) -> tuple[Card, str]:
         '''
             Play a round of the game of Sueca, selecting the highest ranked card
         '''
@@ -227,15 +226,27 @@ class GreedyPlayer (Player):
             Return the strategy of the player
             In this case, the strategy is just random
         '''
+
         return 'Greedy Player'
 
 
 class MaximizePointsPlayer (Player):
+    '''
+        MaximizePointsPlayer ->
+            - id: id of the player
+            - name: player name
+            - team: team object to which the player belongs
+            - v: verbose
+    '''
 
-    def __init__(self, id, name, team, v) -> None:
+    def __init__(self, id:int, name:str, team:'Team', v:bool) -> None:
         super().__init__(id, name, team, v)
 
-    def play_round(self, i, cards_played, round_suit, players_order, game, mode) -> Card:
+    def play_round(self, i:int, cards_played:list[Card], round_suit:str, players_order:list[Player], game:Game, mode:str) -> Card:
+        '''
+            Play a round of the game of Sueca, selecting the card that maximizes the points won
+        '''
+
         if i == 0:
             cardPlayed = self.hand[-1]
             round_suit = cardPlayed.suit
@@ -279,15 +290,27 @@ class MaximizePointsPlayer (Player):
         '''
             Return the strategy of the player
         '''
+
         return 'Maximize Points Won'
 
 
 class MaximizeRoundsWonPlayer (Player):
+    '''
+        MaximizeRoundsWonPlayer ->
+            - id: id of the player
+            - name: player name
+            - team: team object to which the player belongs
+            - v: verbose
+    '''
 
-    def __init__(self, id, name, team, v) -> None:
+    def __init__(self, id:int, name:str, team:'Team', v:bool) -> None:
         super().__init__(id, name, team, v)
 
-    def play_round(self, i, cards_played, round_suit, players_order, game, mode):
+    def play_round(self, i:int, cards_played:list[Card], round_suit:str, players_order:list[Player], game:Game, mode:str) -> Card:
+        '''
+            Play a round of the game of Sueca, selecting the card that maximizes the rounds won
+        '''
+
         if i == 0:
             cardPlayed = self.hand[-1]
             round_suit = cardPlayed.suit
@@ -335,40 +358,42 @@ class MaximizeRoundsWonPlayer (Player):
         '''
             Return the strategy of the player
         '''
+
         return 'Maximize Rounds Won'
 
 
 class CooperativePlayer (BeliefPlayer):
     '''
         CooperativePlayer ->
+            - id: id of the player
             - name: player name
             - team: team object to which the player belongs
-            - play_round(i, cards_played, round_suit): play a round of the game
+            - v: verbose
     '''
 
-    def __init__(self, id,  name, team, v) -> None:
+    def __init__(self, id:int, name:str, team:'Team', v:bool) -> None:
         super().__init__(id, name, team, v)
 
-    def update_beliefs_initial(self, card) -> None:
+    def update_beliefs_initial(self, card:Card) -> None:
         '''
             Update the beliefs of the player after the initial handing of cards
         '''
 
         return super().update_beliefs_initial(card)
 
-    def update_beliefs(self, card, round_suit, player, mode) -> None:
+    def update_beliefs(self, card:Card, round_suit:str, player:Player, mode:str) -> None:
         '''
             The card was seen so we now know that no player no longer has it
         '''
 
         super().update_beliefs(card, round_suit, player, mode)
 
-    def play_round(self, i, cards_played_in_round, round_suit, players_order, game, mode, num_round) -> tuple[Card, str]:
+    def play_round(self, i:int, round_suit:str, mode:str) -> tuple[Card, str]:
         '''
             Play a round of the game of Sueca, selecting the card, considering
             the cards that its partner has, acting as a "team player"
         '''
-        # NOTE: what to do in this strategy?
+
         if i == 0:  # if the player is the first to play, play a random card
             cardPlayed = self.hand.pop(randint(0, len(self.hand) - 1))
             round_suit = cardPlayed.suit
@@ -391,29 +416,37 @@ class CooperativePlayer (BeliefPlayer):
         '''
             Return the strategy of the player
         '''
+
         return 'Cooperative Player'
 
 
 class PredictorPlayer (BeliefPlayer):
+    '''
+        PredictorPlayer ->
+            - id: id of the player
+            - name: player name
+            - team: team object to which the player belongs
+            - v: verbose
+    '''
 
-    def __init__(self, id,  name, team, v) -> None:
+    def __init__(self, id:int, name:str, team:'Team', v:bool) -> None:
         super().__init__(id, name, team, v)
 
-    def update_beliefs_initial(self, card) -> None:
+    def update_beliefs_initial(self, card:Card) -> None:
         '''
             Update the beliefs of the player after the initial handing of cards
         '''
 
         return super().update_beliefs_initial(card)
 
-    def update_beliefs(self, card, round_suit, player, mode) -> None:
+    def update_beliefs(self, card:Card, round_suit:str, player:Player, mode:str) -> None:
         '''
             Update the beliefs of the player after a card has been spotted
         '''
 
         super().update_beliefs(card, round_suit, player, mode)
 
-    def get_player_possible_cards(self, player, suit='all') -> list:
+    def get_player_possible_cards(self, player:Player, suit:str='all') -> tuple[list[Card], list[float]]:
         '''
             Returns the cards of a given player
         '''
@@ -433,7 +466,7 @@ class PredictorPlayer (BeliefPlayer):
 
         return player_cards, cards_prob
 
-    def play_round(self, i, cards_played_in_round, round_suit, players_order, game, mode, num_round) -> tuple[Card, str]:
+    def play_round(self, i:int, cards_played_in_round:list[Card], round_suit:str, players_order:list[Player], game:Game, mode:str, num_round:int) -> tuple[Card, str]:
         '''
             Play a round of Sueca, selecting the card considering the cards that its partner has,
             acting as a "team player", and using utility based on projected round points and
@@ -520,4 +553,6 @@ class PredictorPlayer (BeliefPlayer):
             Return the strategy of the player
             In this case, the strategy is just random
         '''
+
         return 'Deck Predictor'
+
