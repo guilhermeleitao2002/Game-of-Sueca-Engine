@@ -24,35 +24,39 @@ def parse_arguments():
 ########################################## Main Program #############################################
 
 if __name__ == "__main__":
-    args = parse_arguments()
-    verbose = args.verbose
+    try:
+        args = parse_arguments()
+        verbose = args.verbose
 
-    # Clean the output file
-    with open(args.output, 'w') as f:
-        f.write('')
+        # Clean the output file
+        with open(args.output, 'w') as f:
+            f.write('')
 
-    wins = {'Benfica': 0, 'Sporting': 0, 'ties': 0}
+        wins = {'Benfica': 0, 'Sporting': 0, 'ties': 0}
 
-    for i in range(args.num_games):
-        if verbose:
-            print(colored(f'\nGAME {i + 1}', 'green', attrs=['bold', 'underline']))
+        for i in range(args.num_games):
+            if verbose:
+                print(colored(f'\nGAME {i + 1}', 'green', attrs=['bold', 'underline']))
 
-        # Initialize the game
-        game = Game(args.team_1, args.team_2, verbose, args.mode)
+            # Initialize the game
+            game = Game(args.team_1, args.team_2, verbose, args.mode)
 
-        # If the game is in human mode, print the player's partner
-        if args.mode == 'human':
-            print(f'\nYour partner is {colored(game.get_partner("Leitao").name, "light_yellow")}')
+            # If the game is in human mode, print the player's partner
+            if args.mode == 'human':
+                print(f'\nYour partner is {colored(game.get_partner("Leitao").name, "light_yellow")}')
 
-        # Distribute the cards
-        game.hand_cards()
+            # Distribute the cards
+            game.hand_cards()
 
-        # Play the game
-        winner = game.play_game()
-        wins[winner] += 1
+            # Play the game
+            winner = game.play_game()
+            wins[winner] += 1
 
-        with open(args.output, 'a') as f:
-            game.game_info['Game'] = i + 1
-            json.dump(game.game_info, f, indent = 4, sort_keys=True)
+            with open(args.output, 'a') as f:
+                game.game_info['Game'] = i + 1
+                json.dump(game.game_info, f, indent = 4, sort_keys=True)
 
-    print(colored(f'\nWins: {wins}', 'magenta', attrs=['bold']))
+        print(colored(f'\nWins: {wins}', 'magenta', attrs=['bold']))
+    except KeyboardInterrupt:
+        print(colored('\nGoodbye!', 'blue'))
+        exit(0)

@@ -277,12 +277,8 @@ class Game:
                 print(colored(card_played.name, 'blue', attrs=['bold']))
                 # Wait for user input
                 while True:
-                    try:
-                        card_name = input(colored('> ', attrs=['bold']))
-                    except KeyboardInterrupt:
-                        print(colored('\nGoodbye!', 'blue'))
-                        exit(0)
-
+                    card_name = input(colored('> ', attrs=['bold']))
+                    
                     card_played = player.get_card(card_name)
                     if card_played:
                         break
