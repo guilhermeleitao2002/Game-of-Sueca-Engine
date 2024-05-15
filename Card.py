@@ -22,3 +22,6 @@ class Card:
     
     def __hash__(self) -> int:
         return hash((self.suit, self.order))
+
+    def __str__(self) -> str:
+        return self.name
