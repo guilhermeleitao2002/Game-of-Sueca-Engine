@@ -12,8 +12,8 @@ def parse_arguments():
     parser = ArgumentParser(description='Sueca game simulator')
 
     parser.add_argument('-o', '--output', type=str, required=True, help='Output file to save the game log')
-    parser.add_argument('-t1', '--team_1', type=str, required=True, help='Strategy for team 1: random, maxpointswon, maxroundswon, cooperative, greedy, predictor')
-    parser.add_argument('-t2', '--team_2', type=str, required=True, help='Strategy for team 2: random, maxpointswon, maxroundswon, cooperative, greedy, predictor')
+    parser.add_argument('-s', '--sporting', type=str, required=True, help='Strategy for team Sporting: random, maxpointswon, maxroundswon, cooperative, greedy, predictor')
+    parser.add_argument('-b', '--benfica', type=str, required=True, help='Strategy for team Benfica: random, maxpointswon, maxroundswon, cooperative, greedy, predictor')
     parser.add_argument('-n', '--num_games', type=int, default=1, help='Number of games to simulate')
     parser.add_argument('-v', '--verbose', action='store_true', default=False, help='Print the game information as it unfolds')
     parser.add_argument('-m', '--mode', type=str, default='auto', help='Mode of the game: auto (machine vs machine) or human (machine vs user)')
@@ -39,7 +39,7 @@ if __name__ == "__main__":
                 print(colored(f'\nGAME {i + 1}', 'green', attrs=['bold', 'underline']))
 
             # Initialize the game
-            game = Game(args.team_1, args.team_2, verbose, args.mode)
+            game = Game(args.sporting, args.benfica, verbose, args.mode)
 
             # If the game is in human mode, print the player's partner
             if args.mode == 'human':
