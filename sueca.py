@@ -71,8 +71,11 @@ if __name__ == "__main__":
             f.write('[\n')
 
         wins = {'Benfica': 0, 'Sporting': 0, 'ties': 0,
+                'average_points_per_game_sporing': 0,
+                'average_points_per_game_benfica': 0,
                 'converted_points_sporting': 0,
-                'converted_points_benfica': 0 }
+                'converted_points_benfica': 0
+                }
 
         for i in range(args.num_games):
             if verbose:
@@ -90,16 +93,19 @@ if __name__ == "__main__":
 
             # Play the game
             winner = game.play_game()
-            sporting_converted_score = game.teams[0].score - game.teams[0].initial_points
-            benfica_converted_score = game.teams[1].score - game.teams[1].initial_points
-            wins['converted_points_sporting'] += sporting_converted_score
-            wins['converted_points_benfica'] += benfica_converted_score
+            wins['average_points_per_game_sporing'] += game.teams[0].score
+            wins['average_points_per_game_benfica'] += game.teams[1].score
+            wins['converted_points_sporting'] += game.teams[0].score - game.teams[0].initial_points
+            wins['converted_points_benfica'] += game.teams[1].score - game.teams[1].initial_points
             wins[winner] += 1
 
             with open(args.output, 'a') as f:
                 game.game_info['Game'] = i + 1
                 f.write(dumps(game.game_info, indent = 4, sort_keys=True) + f'{"," if i < args.num_games - 1 else ""}\n')
 
+
+        wins['average_points_per_game_sporing'] /= args.num_games
+        wins['average_points_per_game_benfica'] /= args.num_games
         wins['converted_points_sporting'] /= args.num_games
         wins['converted_points_benfica'] /= args.num_games
         # Close the output file
@@ -107,7 +113,7 @@ if __name__ == "__main__":
             f.write(']')
 
         print(colored(f'\nWins: {wins}', 'magenta', attrs=['bold']))
-        
+
         if args.mode == 'auto':
             plot_results(wins, args.benfica, args.sporting)
 
