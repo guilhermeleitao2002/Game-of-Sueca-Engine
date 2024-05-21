@@ -70,7 +70,9 @@ if __name__ == "__main__":
         with open(args.output, 'w') as f:
             f.write('[\n')
 
-        wins = {'Benfica': 0, 'Sporting': 0, 'ties': 0}
+        wins = {'Benfica': 0, 'Sporting': 0, 'ties': 0,
+                'converted_points_sporting': 0,
+                'converted_points_benfica': 0 }
 
         for i in range(args.num_games):
             if verbose:
@@ -88,12 +90,18 @@ if __name__ == "__main__":
 
             # Play the game
             winner = game.play_game()
+            sporting_converted_score = game.teams[0].score - game.teams[0].initial_points
+            benfica_converted_score = game.teams[1].score - game.teams[1].initial_points
+            wins['converted_points_sporting'] += sporting_converted_score
+            wins['converted_points_benfica'] += benfica_converted_score
             wins[winner] += 1
 
             with open(args.output, 'a') as f:
                 game.game_info['Game'] = i + 1
                 f.write(dumps(game.game_info, indent = 4, sort_keys=True) + f'{"," if i < args.num_games - 1 else ""}\n')
 
+        wins['converted_points_sporting'] /= args.num_games
+        wins['converted_points_benfica'] /= args.num_games
         # Close the output file
         with open(args.output, 'a') as f:
             f.write(']')
