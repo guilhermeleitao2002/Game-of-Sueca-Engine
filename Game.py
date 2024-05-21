@@ -266,7 +266,7 @@ class Game:
                 case 'Deck Predictor':
                     card_played, roundSuit = player.play_round(i, cardsPlayedInround, roundSuit, self.playersOrder, self, self.mode, num_round)
                 case 'Cooperative Player':
-                    card_played, roundSuit = player.play_round(i, roundSuit, self.mode)
+                    card_played, roundSuit = player.play_round(i, roundSuit, self, cardsPlayedInround)
                 case _:
                     card_played, roundSuit = player.play_round(i, roundSuit, self.mode)
 
