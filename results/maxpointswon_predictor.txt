@@ -1,0 +1,2 @@
+
+Wins: {'Benfica': 5302, 'Sporting': 4497, 'ties': 201, 'average_points_per_game_sporing': 58.1292, 'average_points_per_game_benfica': 61.8708, 'converted_points_sporting': -1.8707, 'converted_points_benfica': 1.8707}
